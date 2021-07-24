@@ -515,7 +515,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             ),
                             vol.Required(CONF_DEVICE_NAME): cv.string,
                             vol.Optional(CONF_DEVICE_FRIENDLY_NAME): cv.string,
-                            vol.Optional(CONF_DEVICE_TYPE): vol.In(
+                            vol.Optional(CONF_DEVICE_TYPE, default='dimmer'): vol.In(
                                 [k.CONF_TYPE for k in __CLASS_LIST]
                             ),
                             vol.Optional(CONF_DEVICE_TRANSITION, default=0): vol.All(
