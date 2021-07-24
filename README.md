@@ -109,6 +109,11 @@ Device configuration variables:
 - The graph shows different output depending on the output correction.
 
 - Quadratic or cubic results in much smoother and more pleasant fades when using LED Strips.
+The graph shows different output depending on the output correction.
+
+From left to right:
+linear (default when nothing is set), quadratic, cubic then quadruple
+<img src='curves.svg'>
 
 #### Limitations
 
