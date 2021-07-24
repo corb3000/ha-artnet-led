@@ -4,7 +4,7 @@ Updated integration Supporting the new color mode in Home Assistant. leveraged h
 Now supports 16 bit resolution (also supports 24 bit and 32 bit but I don't know of a DMX controller that would use it)
 Use Brightness and RGB value separately to give more resolution to brightness to be able to make use of 16 bit resolution
 
-The DMX integration for Home Assistant allows you to send DMX values to an [Art-Net](http://www.art-net.org.uk) capable DMX interface. This component is a one way integration which sends [Art-Net](https://en.wikipedia.org/wiki/Art-Net) UDP packets to the DMX interface. This integration uses no external libraries and requires at least Python version 3.5.
+The DMX integration for Home Assistant allows you to send DMX values to an [Art-Net](http://www.art-net.org.uk) capable DMX interface. This component is a one way integration which sends [Art-Net](https://en.wikipedia.org/wiki/Art-Net) UDP packets to the DMX interface. This integration uses [pyartnet](https://github.com/spacemanspiff2007/PyArtNet) libraries and requires at least Python version 3.8.
 
 ## Prerequisites
 
