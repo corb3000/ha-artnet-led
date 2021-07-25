@@ -51,15 +51,10 @@ light:
         - channel: 125
           type: "color_temp"
           name: "my_color_temp_lamp"
-          transition: 1
-          channel_size: "16bit"
-          output_correction: quadratic
         - channel: 41
           type: rgbww
           name: my_rgbww_lamp
           transition: 10
-          channel_size: "16bit"
-          output_correction: quadruple
 ```
 
 Configuration variables:
