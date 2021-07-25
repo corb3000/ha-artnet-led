@@ -123,7 +123,7 @@ linear (default when nothing is set), quadratic, cubic then quadruple
 
 #### Future improvements
 
-- 
+- Lights are assigned a unique ID generated from the IP addreess, Port, Universe and Channel.
 
 
 #### Supported hardware
