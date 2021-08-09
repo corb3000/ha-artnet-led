@@ -28,7 +28,7 @@ Artnet-led lighting configuration:
 
 ```yaml
 light:
-- platform: artnet-led
+- platform: artnet_led
   host: IP                              # IP of Art-Net Node
   max_fps: 25                           # Max 40 per second
   refresh_every: 0                      # Resend values if no fades are running every x seconds, 0 disables automatic refresh
