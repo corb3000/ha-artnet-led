@@ -36,6 +36,8 @@ from homeassistant.const import CONF_TYPE as CONF_DEVICE_TYPE
 
 CONF_DEVICE_TRANSITION = ATTR_TRANSITION
 
+CONF_INITIAL_VALUES = "initial_values"
+
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 import voluptuous as vol
@@ -55,6 +57,7 @@ CONF_NODE_REFRESH = "refresh_every"
 CONF_NODE_UNIVERSES = "universes"
 
 CONF_DEVICE_CHANNEL = "channel"
+CONF_DEVICE_VALUE = "value"
 CONF_OUTPUT_CORRECTION = "output_correction"
 CONF_CHANNEL_SIZE = "channel_size"
 
@@ -121,6 +124,9 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 universe_cfg[CONF_OUTPUT_CORRECTION]
             )
 
+        for iv in universe_cfg[CONF_INITIAL_VALUES]: #type: dict
+            pass
+
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
             device = device.copy()
             cls = __CLASS_TYPE[device[CONF_DEVICE_TYPE]]
@@ -136,9 +142,13 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                     channel_type=d._channel_size[1],
                 )
             )
+            
             d._channel.output_correction = AVAILABLE_CORRECTIONS.get(
                 device[CONF_OUTPUT_CORRECTION]
             )
+
+            if device[CONF_DEVICE_VALUE]:
+                pass
 
             device_list.append(d)
 
@@ -285,6 +295,26 @@ class ArtnetBaseLight(LightEntity):
         self._state = False
         self.async_schedule_update_ha_state()
 
+class ArtnetFixed(ArtnetBaseLight):
+    CONF_TYPE = "fixed"
+    CHANNEL_WIDTH = 1
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._channel_width = 1
+        #self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+        #self._color_mode = COLOR_MODE_BRIGHTNESS
+
+        #await super().async_create_fade(**kwargs)
+
+    def get_target_values(self):
+        return [self.brightness * self._channel_size[2]]
+
+    async def async_turn_on(self, **kwargs):
+        pass # do nothing
+
+    async def async_turn_off(self, **kwargs):
+        pass # do nothing
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
@@ -495,7 +525,7 @@ class ArtnetRGBWW(ArtnetBaseLight):
 # conf
 # ------------------------------------------------------------------------------
 
-__CLASS_LIST = [ArtnetDimmer, ArtnetRGB, ArtnetWhite, ArtnetRGBW, ArtnetRGBWW]
+__CLASS_LIST = [ArtnetDimmer, ArtnetRGB, ArtnetWhite, ArtnetRGBW, ArtnetRGBWW, ArtnetFixed]
 __CLASS_TYPE = {k.CONF_TYPE: k for k in __CLASS_LIST}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -526,6 +556,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             ),
                             vol.Optional(CONF_CHANNEL_SIZE, default="8bit"): vol.Any(
                                 None, vol.In(CHANNEL_SIZE)
+                            ),
+                            vol.Optional(CONF_DEVICE_VALUE, default=0): vol.All(
+                                vol.Coerce(int), vol.Range(min=0, max=255)
+                            ),
+                        }
+                    ],
+                ),
+                vol.Optional(CONF_INITIAL_VALUES): vol.All(
+                    cv.ensure_list,
+                    [
+                        {
+                            vol.Required(CONF_DEVICE_CHANNEL): vol.All(
+                                vol.Coerce(int), vol.Range(min=1, max=512)
+                            ),
+                            vol.Required(CONF_DEVICE_VALUE): vol.All(
+                                vol.Coerce(int), vol.Range(min=0, max=255)
                             ),
                         }
                     ],
