@@ -4,6 +4,6 @@
     "documentation": "https://github.com/corb3000/ha-artnet-led",
     "dependencies": [],
     "codeowners": ["corb3000"],
-    "requirements": ["pyartnet==0.8.2"],
+    "requirements": ["pyartnet==0.8.3"],
     "version": "0.0.1"
   }
