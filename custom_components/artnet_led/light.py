@@ -76,7 +76,10 @@ AVAILABLE_CORRECTIONS = {
     "quadruple": None,
 }
 
+def linear_output_correction(val: float, max_val: int = 0xFF):
+    return val
 
+AVAILABLE_CORRECTIONS["linear"] = linear_output_correction
 AVAILABLE_CORRECTIONS["quadratic"] = pyartnet.output_correction.quadratic
 AVAILABLE_CORRECTIONS["cubic"] = pyartnet.output_correction.cubic
 AVAILABLE_CORRECTIONS["quadruple"] = pyartnet.output_correction.quadruple
@@ -310,13 +313,11 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         old_state = await self.async_get_last_state()
-        if not old_state:
-            return
-
-        old_type = old_state.attributes.get('type')
-        if old_type != self._type:
-            log.debug("Channel type changed. Unable to restore state.")
-            return
+        if old_state:
+            old_type = old_state.attributes.get('type')
+            if old_type != self._type:
+                log.debug("Channel type changed. Unable to restore state.")
+                old_state = None
         
         await self.restore_state( old_state )
 
@@ -371,8 +372,9 @@ class ArtnetDimmer(ArtnetBaseLight):
     async def restore_state(self, old_state):
         log.debug("Added dimmer to hass. Try restoring state.")
 
-        prev_brightness = old_state.attributes.get('bright')
-        self._brightness = prev_brightness
+        if old_state:
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
 
         await super().async_create_fade(brightness = prev_brightness, transition = 0)
 
