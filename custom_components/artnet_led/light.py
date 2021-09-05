@@ -4,7 +4,6 @@ from pprint import pprint
 import time
 import typing
 
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -26,6 +25,8 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     LightEntity,
 )
+
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.const import CONF_DEVICES
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
@@ -124,8 +125,9 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 universe_cfg[CONF_OUTPUT_CORRECTION]
             )
 
-        for iv in universe_cfg[CONF_INITIAL_VALUES]: #type: dict
-            pass
+        if CONF_INITIAL_VALUES in universe_cfg.keys():
+            for iv in universe_cfg[CONF_INITIAL_VALUES]: #type: dict
+                pass
 
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
             device = device.copy()
@@ -134,6 +136,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
 
             # create device
             d = cls(**device)  # type: ArtnetBaseLight
+            d.set_type(device[CONF_DEVICE_TYPE])
             d.set_channel(
                 universe.add_channel(
                     start=device[CONF_DEVICE_CHANNEL],
@@ -148,7 +151,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             )
 
             if device[CONF_DEVICE_VALUE]:
-                pass
+                d.set_initial_brightness(device[CONF_DEVICE_VALUE])
 
             device_list.append(d)
 
@@ -156,7 +159,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     return True
 
 
-class ArtnetBaseLight(LightEntity):
+class ArtnetBaseLight(LightEntity, RestoreEntity):
     def __init__(self, name, unique_id, **kwargs):
         self._name = name
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
@@ -177,6 +180,7 @@ class ArtnetBaseLight(LightEntity):
         self._channel_last_update = 0
         self._scale_factor = 1
         self._channel_width = 0
+        self._type = None
 
     def set_channel(self, channel):
         "Set the channel & the callbacks"
@@ -184,6 +188,12 @@ class ArtnetBaseLight(LightEntity):
         self._channel = channel
         self._channel.callback_value_changed = self._channel_value_change
         self._channel.callback_fade_finished = self._channel_fade_finish
+
+    def set_type(self, type):
+        self._type = type
+
+    def set_initial_brightness(self, brightness):
+        self._brightness = brightness
 
     @property
     def name(self):
@@ -214,6 +224,7 @@ class ArtnetBaseLight(LightEntity):
     @property
     def device_state_attributes(self):
         data = {}
+        data["type"] = self._type
         data["dmx_channels"] = [
             k
             for k in range(
@@ -295,6 +306,24 @@ class ArtnetBaseLight(LightEntity):
         self._state = False
         self.async_schedule_update_ha_state()
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if not old_state:
+            return
+
+        old_type = old_state.attributes.get('type')
+        if old_type != self._type:
+            log.debug("Channel type changed. Unable to restore state.")
+            return
+        
+        await self.restore_state( old_state )
+
+    async def restore_state(self, old_state):
+        log.debug("Derived class should implement this")
+
+
 class ArtnetFixed(ArtnetBaseLight):
     CONF_TYPE = "fixed"
     CHANNEL_WIDTH = 1
@@ -302,10 +331,6 @@ class ArtnetFixed(ArtnetBaseLight):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._channel_width = 1
-        #self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-        #self._color_mode = COLOR_MODE_BRIGHTNESS
-
-        #await super().async_create_fade(**kwargs)
 
     def get_target_values(self):
         return [self.brightness * self._channel_size[2]]
@@ -315,6 +340,11 @@ class ArtnetFixed(ArtnetBaseLight):
 
     async def async_turn_off(self, **kwargs):
         pass # do nothing
+
+    async def restore_state(self, old_state):
+        log.debug("Added fixed to hass. Do nothing to restore state (fixed!).")
+        await super().async_create_fade()
+
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
@@ -337,6 +367,14 @@ class ArtnetDimmer(ArtnetBaseLight):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         await super().async_create_fade(**kwargs)
+
+    async def restore_state(self, old_state):
+        log.debug("Added dimmer to hass. Try restoring state.")
+
+        prev_brightness = old_state.attributes.get('bright')
+        self._brightness = prev_brightness
+
+        await super().async_create_fade(brightness = prev_brightness, transition = 0)
 
 
 class ArtnetRGB(ArtnetBaseLight):
