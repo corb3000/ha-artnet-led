@@ -376,7 +376,7 @@ class ArtnetDimmer(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = prev_brightness, transition = 0)
+        await super().async_create_fade(brightness = self._brightness, transition = 0)
 
 
 class ArtnetRGB(ArtnetBaseLight):
@@ -416,6 +416,17 @@ class ArtnetRGB(ArtnetBaseLight):
 
         await super().async_create_fade(**kwargs)
         return None
+
+    async def restore_state(self, old_state):
+        log.debug("Added rgb to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+
+        await super().async_create_fade(brightness = self._brightness, rgb_color = self._vals, transition = 0)
 
 
 class ArtnetWhite(ArtnetBaseLight):
@@ -521,6 +532,18 @@ class ArtnetRGBW(ArtnetBaseLight):
         await super().async_create_fade(**kwargs)
         return None
 
+    async def restore_state(self, old_state):
+        log.debug("Added rgbw to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+
+        await super().async_create_fade(brightness = self._brightness, rgbw_color = self._vals, transition = 0)
+
 
 class ArtnetRGBWW(ArtnetBaseLight):
     CONF_TYPE = "rgbww"
@@ -559,6 +582,19 @@ class ArtnetRGBWW(ArtnetBaseLight):
 
         await super().async_create_fade(**kwargs)
         return None
+
+    async def restore_state(self, old_state):
+        log.debug("Added rgbww to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+            self._scale_factor = self._brightness / 255
+
+        await super().async_create_fade(brightness = self._brightness, rgbww_color = self._vals, transition = 0)
 
 
 # ------------------------------------------------------------------------------
