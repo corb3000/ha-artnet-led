@@ -82,7 +82,7 @@ Device configuration variables:
     - **'rgb'** (red, green, blue)
     - **'rgbw'** (red, green, blue, white)
     - **'rgbww'** (red, green, blue, cool-white, warm-white)
-    - **'custom_white'** (cool-white, warm-white)
+    - **'color_temp'** (cool-white, warm-white)
   - **output_correction** (*Optional; default=linear*): applied to each channel, overrides universe setting.
     - **'linear'**
     - **'quadratic'** (see Graph)
@@ -130,9 +130,8 @@ linear (default when nothing is set), quadratic, cubic then quadruple
 #### Supported hardware
 
 - Should work with any Art-Net enabled DMX interface.
-- Artnet interface tested on DMX King eDMX4
-- 16 bit DMX support tested on 32 Channel 96A RGBW DMX 512 LED Decoder Controller DMX Dimmer DC5-24V RGBW RGB LED Light 8 Bit/16 Bit.
-[Learn more: ](https://www.amazon.com/dp/B075FHJM35/ref=cm_sw_em_r_mt_dp_0098GH3MGCYHCYKXR5AQ?_encoding=UTF8&psc=1) 
+- Artnet interface tested on DMX King eDMX4 and ENTTEC DIN Ethergate 2.
+- 16 bit DMX support tested on Bincolor BC-632 and Bincolor BC-640-DIN.
 
 
 ## See Also
