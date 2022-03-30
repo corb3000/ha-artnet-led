@@ -28,7 +28,7 @@ from homeassistant.components.light import (
 
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from homeassistant.const import CONF_DEVICES, STATE_OFF
+from homeassistant.const import CONF_DEVICES, STATE_OFF, STATE_ON
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST as CONF_NODE_HOST
 from homeassistant.const import CONF_NAME as CONF_DEVICE_NAME
@@ -337,15 +337,33 @@ class ArtnetFixed(ArtnetBaseLight):
         return [self.brightness * self._channel_size[2]]
 
     async def async_turn_on(self, **kwargs):
-        pass # do nothing
+        self._state = True
+        self._brightness = 255
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        pass # do nothing
+        self._state = False
+        self._brightness = 0
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
 
     async def restore_state(self, old_state):
-        log.debug("Added fixed to hass. Do nothing to restore state (fixed!).")
-        await super().async_create_fade()
+        log.debug("Added fixed to hass. Try restoring state.")
+        self._state = old_state.state
+        self._brightness = old_state.attributes.get('bright')
 
+        log.debug(old_state.state)
+        log.debug(old_state.attributes.get('bright'))
+
+        if old_state.state == STATE_ON:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
