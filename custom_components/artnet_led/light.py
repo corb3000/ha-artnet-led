@@ -202,7 +202,7 @@ class ArtnetBaseLight(LightEntity):
         return self._features
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         data = {}
         data["dmx_channels"] = [
             k
