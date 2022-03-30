@@ -322,7 +322,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         await self.restore_state( old_state )
 
     async def restore_state(self, old_state):
-        log.debug("Derived class should implement this")
+        log.error("Derived class should implement this. Report this to the repository author.")
 
 
 class ArtnetFixed(ArtnetBaseLight):
@@ -494,6 +494,17 @@ class ArtnetWhite(ArtnetBaseLight):
         await super().async_create_fade(**kwargs)
         return None
 
+    async def restore_state(self, old_state):
+        log.debug("Added color_temp to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+
+        await super().async_create_fade(brightness = self._brightness, rgb_color = self._vals, transition = 0)
+
 
 class ArtnetRGBW(ArtnetBaseLight):
     CONF_TYPE = "rgbw"
@@ -656,7 +667,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         },
         vol.Optional(CONF_NODE_PORT, default=6454): cv.port,
         vol.Optional(CONF_NODE_MAX_FPS, default=25): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=40)
+            vol.Coerce(int), vol.Range(min=1, max=50)
         ),
         vol.Optional(CONF_NODE_REFRESH, default=120): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=9999)
