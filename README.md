@@ -55,6 +55,10 @@ light:
           type: rgbww
           name: my_rgbww_lamp
           transition: 10
+        - channel: 50
+          name: sp4led_1_dimmer
+          default_level: 255
+          type: fixed
 ```
 
 Configuration variables:
@@ -73,6 +77,7 @@ Device configuration variables:
   - **channel** (*Required*): The DMX channel for the light (1-512)
   - **name** (*Required*): Friendly name for the light 
   - **type** (*Optional; default=dimmer*): 
+    - **'fixed'** (fixed single channel)
     - **'dimmer'** (single channel)
     - **'rgb'** (red, green, blue)
     - **'rgbw'** (red, green, blue, white)
@@ -88,6 +93,7 @@ Device configuration variables:
     - **'16bit'** (65k steps)
     - **'24bit'** (too many steps)
     - **'32bit'** (dont ask steps)
+  - **default_level** (value at startup, if state can't or shouldn't be restored)
 
 #### Supported features
 
