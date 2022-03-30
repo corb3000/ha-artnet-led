@@ -28,7 +28,7 @@ from homeassistant.components.light import (
 
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_OFF
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST as CONF_NODE_HOST
 from homeassistant.const import CONF_NAME as CONF_DEVICE_NAME
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                     channel_type=d._channel_size[1],
                 )
             )
-            
+
             d._channel.output_correction = AVAILABLE_CORRECTIONS.get(
                 device[CONF_OUTPUT_CORRECTION]
             )
@@ -376,7 +376,8 @@ class ArtnetDimmer(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, transition=0)
 
 
 class ArtnetRGB(ArtnetBaseLight):
@@ -426,7 +427,8 @@ class ArtnetRGB(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, rgb_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
 class ArtnetWhite(ArtnetBaseLight):
@@ -503,7 +505,8 @@ class ArtnetWhite(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, rgb_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
 class ArtnetRGBW(ArtnetBaseLight):
@@ -553,7 +556,8 @@ class ArtnetRGBW(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, rgbw_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgbw_color=self._vals, transition=0)
 
 
 class ArtnetRGBWW(ArtnetBaseLight):
@@ -605,7 +609,8 @@ class ArtnetRGBWW(ArtnetBaseLight):
             self._brightness = prev_brightness
             self._scale_factor = self._brightness / 255
 
-        await super().async_create_fade(brightness = self._brightness, rgbww_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgbww_color=self._vals, transition=0)
 
 
 # ------------------------------------------------------------------------------
