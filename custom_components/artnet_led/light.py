@@ -225,7 +225,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         return self._features
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         data = {}
         data["type"] = self._type
         data["dmx_channels"] = [
