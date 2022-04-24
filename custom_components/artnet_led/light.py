@@ -28,7 +28,7 @@ from homeassistant.components.light import (
 
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_OFF, STATE_ON
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST as CONF_NODE_HOST
 from homeassistant.const import CONF_NAME as CONF_DEVICE_NAME
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                     channel_type=d._channel_size[1],
                 )
             )
-            
+
             d._channel.output_correction = AVAILABLE_CORRECTIONS.get(
                 device[CONF_OUTPUT_CORRECTION]
             )
@@ -322,7 +322,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         await self.restore_state( old_state )
 
     async def restore_state(self, old_state):
-        log.debug("Derived class should implement this")
+        log.error("Derived class should implement this. Report this to the repository author.")
 
 
 class ArtnetFixed(ArtnetBaseLight):
@@ -337,15 +337,33 @@ class ArtnetFixed(ArtnetBaseLight):
         return [self.brightness * self._channel_size[2]]
 
     async def async_turn_on(self, **kwargs):
-        pass # do nothing
+        self._state = True
+        self._brightness = 255
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        pass # do nothing
+        self._state = False
+        self._brightness = 0
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
 
     async def restore_state(self, old_state):
-        log.debug("Added fixed to hass. Do nothing to restore state (fixed!).")
-        await super().async_create_fade()
+        log.debug("Added fixed to hass. Try restoring state.")
+        self._state = old_state.state
+        self._brightness = old_state.attributes.get('bright')
 
+        log.debug(old_state.state)
+        log.debug(old_state.attributes.get('bright'))
+
+        if old_state.state == STATE_ON:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
@@ -376,7 +394,8 @@ class ArtnetDimmer(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, transition=0)
 
 
 class ArtnetRGB(ArtnetBaseLight):
@@ -426,7 +445,8 @@ class ArtnetRGB(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, rgb_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
 class ArtnetWhite(ArtnetBaseLight):
@@ -494,6 +514,18 @@ class ArtnetWhite(ArtnetBaseLight):
         await super().async_create_fade(**kwargs)
         return None
 
+    async def restore_state(self, old_state):
+        log.debug("Added color_temp to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
+
 
 class ArtnetRGBW(ArtnetBaseLight):
     CONF_TYPE = "rgbw"
@@ -542,7 +574,8 @@ class ArtnetRGBW(ArtnetBaseLight):
             prev_brightness = old_state.attributes.get('bright')
             self._brightness = prev_brightness
 
-        await super().async_create_fade(brightness = self._brightness, rgbw_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgbw_color=self._vals, transition=0)
 
 
 class ArtnetRGBWW(ArtnetBaseLight):
@@ -594,7 +627,8 @@ class ArtnetRGBWW(ArtnetBaseLight):
             self._brightness = prev_brightness
             self._scale_factor = self._brightness / 255
 
-        await super().async_create_fade(brightness = self._brightness, rgbww_color = self._vals, transition = 0)
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgbww_color=self._vals, transition=0)
 
 
 # ------------------------------------------------------------------------------
@@ -656,7 +690,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         },
         vol.Optional(CONF_NODE_PORT, default=6454): cv.port,
         vol.Optional(CONF_NODE_MAX_FPS, default=25): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=40)
+            vol.Coerce(int), vol.Range(min=1, max=50)
         ),
         vol.Optional(CONF_NODE_REFRESH, default=120): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=9999)
