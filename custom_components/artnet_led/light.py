@@ -153,8 +153,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 device[CONF_OUTPUT_CORRECTION]
             )
 
-            if device[CONF_DEVICE_VALUE]:
-                d.set_initial_brightness(device[CONF_DEVICE_VALUE])
+            d.set_initial_brightness(device[CONF_DEVICE_VALUE])
 
             device_list.append(d)
 
