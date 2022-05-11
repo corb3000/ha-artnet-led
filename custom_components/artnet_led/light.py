@@ -317,8 +317,9 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
             if old_type != self._type:
                 log.debug("Channel type changed. Unable to restore state.")
                 old_state = None
-        
-        await self.restore_state( old_state )
+                
+        if old_state != None:
+            await self.restore_state( old_state )
 
     async def restore_state(self, old_state):
         log.error("Derived class should implement this. Report this to the repository author.")
