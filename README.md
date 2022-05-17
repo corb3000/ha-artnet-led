@@ -34,7 +34,7 @@ light:
   refresh_every: 0                      # Resend values if no fades are running every x seconds, 0 disables automatic refresh
   universes:                            # Support for multiple universes
     0:                                  # Nr of Universe (see configuration of your Art-Net Node)
-    output_correction: quadratic        # optional: output correction for the whole universe, will be used as default if nothing is set for the channel
+      output_correction: quadratic      # optional: output correction for the whole universe, will be used as default if nothing is set for the channel
       devices:
         # Dimmer
         - channel: 1                    # first channel of dmx dimmer
