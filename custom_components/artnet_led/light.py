@@ -135,7 +135,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
             device = device.copy()
             cls = __CLASS_TYPE[device[CONF_DEVICE_TYPE]]
-            device["unique_id"] = str(host) + str(port) + str(universe_nr)
+            device["unique_id"] = str(universe_nr)
 
             # create device
             d = cls(**device)  # type: ArtnetBaseLight
