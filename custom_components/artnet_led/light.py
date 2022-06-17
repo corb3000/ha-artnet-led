@@ -64,6 +64,7 @@ CONF_CHANNEL_SIZE = "channel_size"
 
 CONF_DEVICE_MIN_TEMP = "min_temp"
 CONF_DEVICE_MAX_TEMP = "max_temp"
+CONF_DEVICE_CHANNEL_ORDER = "channel_order"
 
 # Import with syntax highlighting
 import pyartnet
@@ -94,6 +95,8 @@ CHANNEL_SIZE = {
     "24bit": (3, pyartnet.DmxChannel24Bit, 256 * 256),
     "32bit": (4, pyartnet.DmxChannel32Bit, 256 ** 3),
 }
+
+COLOR_TEMP_CHANNEL_ORDER = {"cw": [0, 1], "wc": [1, 0]}
 
 ARTNET_NODES = {}
 
@@ -489,6 +492,11 @@ class ArtnetWhite(ArtnetBaseLight):
         self._max_mireds = self.convert_to_mireds(kwargs[CONF_DEVICE_MIN_TEMP])
         self._vals = (self._max_mireds + self._min_mireds) / 2 or 300
 
+        order = kwargs[CONF_DEVICE_CHANNEL_ORDER]
+        if order is None:
+            order = 'cw'
+        self._channel_order = COLOR_TEMP_CHANNEL_ORDER[order]
+
     @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
@@ -524,7 +532,10 @@ class ArtnetWhite(ArtnetBaseLight):
                 * self._channel_size[2]
             ),
         ]
-        return l
+        return [
+            l[self._channel_order[0]],
+            l[self._channel_order[1]]
+        ]
 
     async def async_turn_on(self, **kwargs):
         """
@@ -708,6 +719,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             vol.Optional(CONF_DEVICE_MAX_TEMP, default='6500K'): vol.Match(
                                 "\\d+(k|K)"
                             ),
+                            vol.Optional(CONF_DEVICE_CHANNEL_ORDER, default=None): vol.Any(
+                                None, vol.In(COLOR_TEMP_CHANNEL_ORDER)
+                            )
                         }
                     ],
                 ),

@@ -24,7 +24,7 @@ hass-dmx is a community supported Home Assistant integration, if you have any qu
 artnet-led lighting is configured in the `configuration.yaml` file under the *light* domain.
 
 
-Artnet-led lighting configuration:
+Example:
 
 ```yaml
 light:
@@ -42,17 +42,18 @@ light:
           type: dimmer                  # type
           transition: 1                 # default duration of fades in sec. Will be overridden by Transition sent from HA
           output_correction: quadratic  # optional: quadratic, cubic or quadruple. Apply different dimming curves to the output. Default is None which means linear dimming
-          channel_size: "16bit"         # width of the channel sent to DMX device, default "8bit", "16bit", "24bit" and "32bit" available.
+          channel_size: 16bit           # width of the channel sent to DMX device, default "8bit", "16bit", "24bit" and "32bit" available.
         - channel: 3
           name: my_rgb_lamp
           transition: 1
-          channel_size: "16bit"
+          channel_size: 16bit
           output_correction: quadratic
         - channel: 125
           type: color_temp
           name: "my_color_temp_lamp"
           min_temp: 6500K
           max_temp: 2500K
+          channel_order: cw
         - channel: 41
           type: rgbww
           name: my_rgbww_lamp
@@ -63,7 +64,7 @@ light:
           type: fixed
 ```
 
-Configuration variables:
+### Configuration variables
 - **host** (*Required*): Art-Net/DMX gateway address
 - **port** (*Optional; default=6454*): Art-Net/DMX gateway port
 - **max-fps** (*Optional; default=25*): frame rate for fade update (1 to 40 FPS)
@@ -75,7 +76,7 @@ Configuration variables:
     - **'cubic'** (see Graph)
     - **'quadruple'** (see Graph)
 
-Device configuration variables:
+### Device configuration variables
   - **channel** (*Required*): The DMX channel for the light (1-512)
   - **name** (*Required*): Friendly name for the light 
   - **type** (*Optional; default=dimmer*): 
@@ -91,16 +92,22 @@ Device configuration variables:
     - **'quadratic'** (see Graph)
     - **'cubic'** (see Graph)
     - **'quadruple'** (see Graph)
-  - **channel_size** (*Optional; default= 8bit): width of the channel sent to DMX device.
+  - **channel_size** (*Optional; default= 8bit*): width of the channel sent to DMX device.
     - **'8bit'** (255 steps)
     - **'16bit'** (65k steps)
     - **'24bit'** (too many steps)
-    - **'32bit'** (dont ask steps)
-  - **default_level** (value at startup, if state can't or shouldn't be restored)
-  - **min_temp** (Optional (only applicable if type=color_temp); default=2700K)
-  - **max_temp** (Optional (only applicable if type=color_temp); default=6500K)
+    - **'32bit'** (don't ask steps)
+  - **default_level** (*Optional; value at startup, if state can't or shouldn't be restored*)
 
-#### Supported features
+### color_temp configuration variables
+On the same level as device variables, but these only apply to devices of type 'color_temp'.
+  - **min_temp** (Optional; default=2700K)
+  - **max_temp** (Optional; default=6500K)
+  - **channel_order** (Optional; default=cw):
+    - **'cw'** (cold white, warm white)
+    - **'wc'** (warm white, cold white)
+
+## Supported features
 
 - Color-Mode. 
     This allows full independent control over: RGB setting, RGB brightness, Cool White brightness and Warm white brightness. with a separate over all brightness control. This allows you to sent the color and white levels to any value independently and then adjust the brightness of the whole light without affecting the color of the light.
