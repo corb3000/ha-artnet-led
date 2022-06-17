@@ -135,7 +135,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
             device = device.copy()
             cls = __CLASS_TYPE[device[CONF_DEVICE_TYPE]]
-            device["unique_id"] = str(host) + str(port) + str(universe_nr)
+            device["unique_id"] = str(universe_nr)
 
             # create device
             d = cls(**device)  # type: ArtnetBaseLight
@@ -153,8 +153,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 device[CONF_OUTPUT_CORRECTION]
             )
 
-            if device[CONF_DEVICE_VALUE]:
-                d.set_initial_brightness(device[CONF_DEVICE_VALUE])
+            d.set_initial_brightness(device[CONF_DEVICE_VALUE])
 
             device_list.append(d)
 
@@ -318,8 +317,9 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
             if old_type != self._type:
                 log.debug("Channel type changed. Unable to restore state.")
                 old_state = None
-        
-        await self.restore_state( old_state )
+                
+        if old_state != None:
+            await self.restore_state( old_state )
 
     async def restore_state(self, old_state):
         log.error("Derived class should implement this. Report this to the repository author.")
@@ -337,33 +337,14 @@ class ArtnetFixed(ArtnetBaseLight):
         return [self.brightness * self._channel_size[2]]
 
     async def async_turn_on(self, **kwargs):
-        self._state = True
-        self._brightness = 255
-        self._channel.add_fade(
-            self.get_target_values(), 0, pyartnet.fades.LinearFade
-        )
-        self.async_schedule_update_ha_state()
+        pass #do nothing, fixed is constant value
 
     async def async_turn_off(self, **kwargs):
-        self._state = False
-        self._brightness = 0
-        self._channel.add_fade(
-            self.get_target_values(), 0, pyartnet.fades.LinearFade
-        )
-        self.async_schedule_update_ha_state()
+        pass #do nothing, fixed is constant value
 
     async def restore_state(self, old_state):
-        log.debug("Added fixed to hass. Try restoring state.")
-        self._state = old_state.state
-        self._brightness = old_state.attributes.get('bright')
-
-        log.debug(old_state.state)
-        log.debug(old_state.attributes.get('bright'))
-
-        if old_state.state == STATE_ON:
-            await self.async_turn_on()
-        else:
-            await self.async_turn_off()
+        log.debug("Added fixed to hass. Do nothing to restore state. Fixed is constant value")
+        await super().async_create_fade()
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
