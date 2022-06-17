@@ -49,8 +49,10 @@ light:
           channel_size: "16bit"
           output_correction: quadratic
         - channel: 125
-          type: "color_temp"
+          type: color_temp
           name: "my_color_temp_lamp"
+          min_temp: 6500K
+          max_temp: 2500K
         - channel: 41
           type: rgbww
           name: my_rgbww_lamp
@@ -95,6 +97,8 @@ Device configuration variables:
     - **'24bit'** (too many steps)
     - **'32bit'** (dont ask steps)
   - **default_level** (value at startup, if state can't or shouldn't be restored)
+  - **min_temp** (Optional (only applicable if type=color_temp); default=2700K)
+  - **max_temp** (Optional (only applicable if type=color_temp); default=6500K)
 
 #### Supported features
 

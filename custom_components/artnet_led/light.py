@@ -62,6 +62,8 @@ CONF_DEVICE_VALUE = "value"
 CONF_OUTPUT_CORRECTION = "output_correction"
 CONF_CHANNEL_SIZE = "channel_size"
 
+CONF_DEVICE_MIN_TEMP = "min_temp"
+CONF_DEVICE_MAX_TEMP = "max_temp"
 
 # Import with syntax highlighting
 import pyartnet
@@ -76,8 +78,10 @@ AVAILABLE_CORRECTIONS = {
     "quadruple": None,
 }
 
+
 def linear_output_correction(val: float, max_val: int = 0xFF):
     return val
+
 
 AVAILABLE_CORRECTIONS["linear"] = linear_output_correction
 AVAILABLE_CORRECTIONS["quadratic"] = pyartnet.output_correction.quadratic
@@ -95,7 +99,6 @@ ARTNET_NODES = {}
 
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-
     import pprint
 
     for l in pprint.pformat(config).splitlines():
@@ -129,7 +132,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             )
 
         if CONF_INITIAL_VALUES in universe_cfg.keys():
-            for iv in universe_cfg[CONF_INITIAL_VALUES]: #type: dict
+            for iv in universe_cfg[CONF_INITIAL_VALUES]:  # type: dict
                 pass
 
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
@@ -175,8 +178,6 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         self._vals = 0
         self._features = 0
         self._supported_color_modes = set()
-        self._min_mireds = 153  # 6500K as a safe default
-        self._max_mireds = 370  # 2700K as a safe default
         # channel & notification callbacks
         self._channel: self._channel_size[1] = None
         self._channel_last_update = 0
@@ -317,9 +318,9 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
             if old_type != self._type:
                 log.debug("Channel type changed. Unable to restore state.")
                 old_state = None
-                
+
         if old_state != None:
-            await self.restore_state( old_state )
+            await self.restore_state(old_state)
 
     async def restore_state(self, old_state):
         log.error("Derived class should implement this. Report this to the repository author.")
@@ -378,10 +379,10 @@ class ArtnetFixed(ArtnetBaseLight):
         return [self.brightness * self._channel_size[2]]
 
     async def async_turn_on(self, **kwargs):
-        pass #do nothing, fixed is constant value
+        pass  # do nothing, fixed is constant value
 
     async def async_turn_off(self, **kwargs):
-        pass #do nothing, fixed is constant value
+        pass  # do nothing, fixed is constant value
 
     async def restore_state(self, old_state):
         log.debug("Added fixed to hass. Do nothing to restore state. Fixed is constant value")
@@ -483,6 +484,9 @@ class ArtnetWhite(ArtnetBaseLight):
         self._supported_color_modes.add('white')
         self._features = SUPPORT_TRANSITION
         self._color_mode = COLOR_MODE_COLOR_TEMP
+        # Intentionally switching min and max here; it's inverted in the conversion.
+        self._min_mireds = self.convert_to_mireds(kwargs[CONF_DEVICE_MAX_TEMP])
+        self._max_mireds = self.convert_to_mireds(kwargs[CONF_DEVICE_MIN_TEMP])
         self._vals = (self._max_mireds + self._min_mireds) / 2 or 300
 
     @property
@@ -502,7 +506,7 @@ class ArtnetWhite(ArtnetBaseLight):
 
     def get_target_values(self):
         ww_fraction = (self._vals - self.min_mireds) / (
-            self.max_mireds - self.min_mireds
+                self.max_mireds - self.min_mireds
         )
         cw_fraction = 1 - ww_fraction
         max_fraction = max(ww_fraction, cw_fraction)
@@ -548,6 +552,11 @@ class ArtnetWhite(ArtnetBaseLight):
 
         if old_state.state != STATE_OFF:
             await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
+
+    @staticmethod
+    def convert_to_mireds(kelvin_string):
+        kelvin_number = int(kelvin_string[:-1])
+        return color_util.color_temperature_kelvin_to_mired(kelvin_number)
 
 
 class ArtnetRGBW(ArtnetBaseLight):
@@ -692,6 +701,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             ),
                             vol.Optional(CONF_DEVICE_VALUE, default=0): vol.All(
                                 vol.Coerce(int), vol.Range(min=0, max=255)
+                            ),
+                            vol.Optional(CONF_DEVICE_MIN_TEMP, default='2700K'): vol.Match(
+                                "\\d+(k|K)"
+                            ),
+                            vol.Optional(CONF_DEVICE_MAX_TEMP, default='6500K'): vol.Match(
+                                "\\d+(k|K)"
                             ),
                         }
                     ],
