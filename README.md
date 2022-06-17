@@ -51,8 +51,8 @@ light:
         - channel: 125
           type: color_temp
           name: "my_color_temp_lamp"
-          min_temp: 6500K
-          max_temp: 2500K
+          min_temp: 2500K
+          max_temp: 6500K
           channel_order: cw
         - channel: 41
           type: rgbww
