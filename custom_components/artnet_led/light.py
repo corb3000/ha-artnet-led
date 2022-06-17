@@ -325,6 +325,47 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         log.error("Derived class should implement this. Report this to the repository author.")
 
 
+class ArtnetBinary(ArtnetBaseLight):
+    CONF_TYPE = "binary"
+    CHANNEL_WIDTH = 1
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._channel_width = 1
+
+    def get_target_values(self):
+        return [self.brightness * self._channel_size[2]]
+
+    async def async_turn_on(self, **kwargs):
+        self._state = True
+        self._brightness = 255
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        self._state = False
+        self._brightness = 0
+        self._channel.add_fade(
+            self.get_target_values(), 0, pyartnet.fades.LinearFade
+        )
+        self.async_schedule_update_ha_state()
+
+    async def restore_state(self, old_state):
+        log.debug("Added binary light to hass. Try restoring state.")
+        self._state = old_state.state
+        self._brightness = old_state.attributes.get('bright')
+
+        log.debug(old_state.state)
+        log.debug(old_state.attributes.get('bright'))
+
+        if old_state.state == STATE_ON:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
+
+
 class ArtnetFixed(ArtnetBaseLight):
     CONF_TYPE = "fixed"
     CHANNEL_WIDTH = 1
@@ -345,6 +386,7 @@ class ArtnetFixed(ArtnetBaseLight):
     async def restore_state(self, old_state):
         log.debug("Added fixed to hass. Do nothing to restore state. Fixed is constant value")
         await super().async_create_fade()
+
 
 class ArtnetDimmer(ArtnetBaseLight):
     CONF_TYPE = "dimmer"
@@ -616,7 +658,7 @@ class ArtnetRGBWW(ArtnetBaseLight):
 # conf
 # ------------------------------------------------------------------------------
 
-__CLASS_LIST = [ArtnetDimmer, ArtnetRGB, ArtnetWhite, ArtnetRGBW, ArtnetRGBWW, ArtnetFixed]
+__CLASS_LIST = [ArtnetDimmer, ArtnetRGB, ArtnetWhite, ArtnetRGBW, ArtnetRGBWW, ArtnetBinary, ArtnetFixed]
 __CLASS_TYPE = {k.CONF_TYPE: k for k in __CLASS_LIST}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

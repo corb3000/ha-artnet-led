@@ -78,6 +78,7 @@ Device configuration variables:
   - **name** (*Required*): Friendly name for the light 
   - **type** (*Optional; default=dimmer*): 
     - **'fixed'** (fixed single channel)
+    - **'binary'** (single channel)
     - **'dimmer'** (single channel)
     - **'rgb'** (red, green, blue)
     - **'rgbw'** (red, green, blue, white)
