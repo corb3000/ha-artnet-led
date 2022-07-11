@@ -1,3 +1,5 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
 # Home Assistant component for Art-Net LED (DMX)
 
 Updated integration Supporting the new color mode in Home Assistant. leveraged heavily form [spacemanspiff2007](https://github.com/spacemanspiff2007/home-assistant-artnet) and [jnimmo](https://github.com/jnimmo/hass-dmx)
