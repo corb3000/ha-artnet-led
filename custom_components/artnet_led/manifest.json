@@ -6,7 +6,9 @@
     "codeowners": [
         "@corb3000",
         "@mvandenabeele",
-        "@Breina"
+        "@spacemanspiff2007",
+        "@jnimmo",
+        "@Breina",
     ],
     "requirements": ["pyartnet==0.8.3"],
     "iot_class": "assumed_state",
