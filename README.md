@@ -53,7 +53,7 @@ light:
           name: "my_color_temp_lamp"
           min_temp: 2500K
           max_temp: 6500K
-          channel_order: cw
+          channel_setup: ch
         - channel: 41
           type: rgbww
           name: my_rgbww_lamp
@@ -103,9 +103,14 @@ light:
 On the same level as device variables, but these only apply to devices of type 'color_temp'.
   - **min_temp** (Optional; default=2700K)
   - **max_temp** (Optional; default=6500K)
-  - **channel_order** (Optional; default=cw):
-    - **'cw'** (cold white, warm white)
-    - **'wc'** (warm white, cold white)
+  - **channel_setup** (Optional; default=ch): String to define channel layout where:
+    - `d` = dimmer (brightness 0 to 255)
+    - `c` = cool white value, scaled for brightness
+    - `C` = cool white value, unscaled
+    - `h` = warm white value, scaled for brightness
+    - `H` = warm white value, unscaled
+    - `t` = temperature (0 = warm, 255 = cold)
+    - `T` = temperature (255 = warm, 0 = cold)
 
 ## Supported features
 

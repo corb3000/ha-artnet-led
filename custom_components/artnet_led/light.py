@@ -56,7 +56,7 @@ CONF_CHANNEL_SIZE = "channel_size"
 
 CONF_DEVICE_MIN_TEMP = "min_temp"
 CONF_DEVICE_MAX_TEMP = "max_temp"
-CONF_DEVICE_CHANNEL_ORDER = "channel_order"
+CONF_CHANNEL_SETUP = "channel_setup"
 
 AVAILABLE_CORRECTIONS = {
     "linear": None,
@@ -81,8 +81,6 @@ CHANNEL_SIZE = {
     "24bit": (3, pyartnet.DmxChannel24Bit, 256 * 256),
     "32bit": (4, pyartnet.DmxChannel32Bit, 256 ** 3),
 }
-
-COLOR_TEMP_CHANNEL_ORDER = {"cw": [0, 1], "wc": [1, 0]}
 
 ARTNET_NODES = {}
 
@@ -478,7 +476,6 @@ class ArtnetWhite(ArtnetBaseLight):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._channel_width = 2
         self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         self._supported_color_modes.add('white')
         self._features = SUPPORT_TRANSITION
@@ -488,10 +485,8 @@ class ArtnetWhite(ArtnetBaseLight):
         self._max_mireds = self.convert_to_mireds(kwargs[CONF_DEVICE_MIN_TEMP])
         self._vals = (self._max_mireds + self._min_mireds) / 2 or 300
 
-        order = kwargs[CONF_DEVICE_CHANNEL_ORDER]
-        if order is None:
-            order = 'cw'
-        self._channel_order = COLOR_TEMP_CHANNEL_ORDER[order]
+        self._channel_setup = kwargs[CONF_CHANNEL_SETUP]
+        self._channel_width = len(self._channel_setup)
 
     @property
     def color_temp(self) -> int:
@@ -509,29 +504,34 @@ class ArtnetWhite(ArtnetBaseLight):
         return self._max_mireds
 
     def get_target_values(self):
-        ww_fraction = (self._vals - self.min_mireds) / (
-                self.max_mireds - self.min_mireds
-        )
+        # d = dimmer
+        # c = cool (scaled for brightness)
+        # C = cool (not scaled)
+        # h = hot (scaled for brightness)
+        # H = hot (not scaled)
+        # t = temperature (0 = hot, 255 = cold)
+        # T = temperature (255 = hot, 0 = cold)
+
+        ww_fraction = (self._vals - self.min_mireds) \
+                      / (self.max_mireds - self.min_mireds)
         cw_fraction = 1 - ww_fraction
         max_fraction = max(ww_fraction, cw_fraction)
-        level = [
-            floor(
-                self.is_on
-                * self._brightness
-                * (cw_fraction / max_fraction)
-                * self._channel_size[2]
-            ),
-            floor(
-                self.is_on
-                * self._brightness
-                * (ww_fraction / max_fraction)
-                * self._channel_size[2]
-            ),
-        ]
-        return [
-            level[self._channel_order[0]],
-            level[self._channel_order[1]]
-        ]
+
+        switcher = {
+            "d": self._brightness,
+            "c": self.is_on * self._brightness * (cw_fraction / max_fraction),
+            "C": self.is_on * (cw_fraction / max_fraction),
+            "h": self.is_on * self._brightness * (ww_fraction / max_fraction),
+            "H": self.is_on * (ww_fraction / max_fraction),
+            "t": 255 - (ww_fraction * 255),
+            "T": ww_fraction * 255
+        }
+
+        values = list()
+        for channel in self._channel_setup:
+            values.append(int(round(switcher.get(channel, 0))))
+
+        return values
 
     async def async_turn_on(self, **kwargs):
         """
@@ -713,9 +713,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             vol.Optional(CONF_DEVICE_MAX_TEMP, default='6500K'): vol.Match(
                                 "\\d+(k|K)"
                             ),
-                            vol.Optional(CONF_DEVICE_CHANNEL_ORDER, default=None): vol.Any(
-                                None, vol.In(COLOR_TEMP_CHANNEL_ORDER)
-                            )
+                            vol.Optional(CONF_CHANNEL_SETUP, default='ch'): cv.string,
                         }
                     ],
                 ),
