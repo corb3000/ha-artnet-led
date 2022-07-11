@@ -1,9 +1,14 @@
 {
     "domain": "artnet_led",
     "name": "DMX Artnet integration",
-    "documentation": "https://github.com/corb3000/ha-artnet-led",
-    "dependencies": [],
-    "codeowners": ["corb3000"],
+    "documentation": "https://github.com/Breina/ha-artnet-led",
+    "issue_tracker": "https://github.com/Breina/ha-artnet-led/issues",
+    "codeowners": [
+        "@corb3000",
+        "@mvandenabeele",
+        "@Breina"
+    ],
     "requirements": ["pyartnet==0.8.3"],
-    "version": "0.0.1"
+    "iot_class": "assumed_state",
+    "version": "0.0.2"
   }

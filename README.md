@@ -13,9 +13,9 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 
 ## Installation
 
-This can be easily installed with the [Home Assistant Community Store (HACS)](https://github.com/custom-components/hacs) using the repository: *corb3000/ha-artnet-led*
+This can be easily installed with the [Home Assistant Community Store (HACS)](https://github.com/custom-components/hacs) using the repository: *Breina/ha-artnet-led*
 
-Alternatively, manual installation by downloading the [custom_components/artnet_led](https://github.com/corb3000/ha-artnet-led) directory to the *custom_components/artnet_led* directory on your Home Assistant instance (generally */config/custom_components/artnet_led*).
+Alternatively, manual installation by downloading the [custom_components/artnet_led](https://github.com/Breina/ha-artnet-led) directory to the *custom_components/artnet_led* directory on your Home Assistant instance (generally */config/custom_components/artnet_led*).
 
 ## Configuration
 

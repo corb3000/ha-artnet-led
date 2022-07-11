@@ -1,19 +1,19 @@
 from __future__ import annotations
-from math import floor
-from pprint import pprint
-import time
-import typing
 
+import logging
+import time
+from math import floor
+
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
+import pyartnet
+import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_MIN_MIREDS,
-    ATTR_MAX_MIREDS,
-    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_WHITE_VALUE,
     ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
@@ -25,25 +25,17 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     LightEntity,
 )
-
-from homeassistant.helpers.restore_state import RestoreEntity
-
 from homeassistant.const import CONF_DEVICES, STATE_OFF, STATE_ON
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST as CONF_NODE_HOST
 from homeassistant.const import CONF_NAME as CONF_DEVICE_NAME
 from homeassistant.const import CONF_PORT as CONF_NODE_PORT
 from homeassistant.const import CONF_TYPE as CONF_DEVICE_TYPE
+from homeassistant.helpers.restore_state import RestoreEntity
 
 CONF_DEVICE_TRANSITION = ATTR_TRANSITION
 
 CONF_INITIAL_VALUES = "initial_values"
-
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
-import voluptuous as vol
-
-import logging
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -66,12 +58,6 @@ CONF_DEVICE_MIN_TEMP = "min_temp"
 CONF_DEVICE_MAX_TEMP = "max_temp"
 CONF_DEVICE_CHANNEL_ORDER = "channel_order"
 
-# Import with syntax highlighting
-import pyartnet
-
-if typing.TYPE_CHECKING:
-    import pyartnet
-
 AVAILABLE_CORRECTIONS = {
     "linear": None,
     "quadratic": None,
@@ -80,7 +66,7 @@ AVAILABLE_CORRECTIONS = {
 }
 
 
-def linear_output_correction(val: float, max_val: int = 0xFF):
+def linear_output_correction(val: float):
     return val
 
 
@@ -104,15 +90,15 @@ ARTNET_NODES = {}
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     import pprint
 
-    for l in pprint.pformat(config).splitlines():
-        log.info(l)
+    for line in pprint.pformat(config).splitlines():
+        log.info(line)
 
     host = config.get(CONF_NODE_HOST)
     port = config.get(CONF_NODE_PORT)
 
     # setup Node
     __id = f"{host}:{port}"
-    if not __id in ARTNET_NODES:
+    if __id not in ARTNET_NODES:
         __node = pyartnet.ArtNetNode(
             host,
             port,
@@ -135,7 +121,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             )
 
         if CONF_INITIAL_VALUES in universe_cfg.keys():
-            for iv in universe_cfg[CONF_INITIAL_VALUES]:  # type: dict
+            for _ in universe_cfg[CONF_INITIAL_VALUES]:  # type: dict
                 pass
 
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
@@ -149,13 +135,13 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             d.set_channel(
                 universe.add_channel(
                     start=device[CONF_DEVICE_CHANNEL],
-                    width=d._channel_width,
-                    channel_name=d._name,
-                    channel_type=d._channel_size[1],
+                    width=d.channel_width,
+                    channel_name=d.name,
+                    channel_type=d.channel_size[1],
                 )
             )
 
-            d._channel.output_correction = AVAILABLE_CORRECTIONS.get(
+            d.channel.output_correction = AVAILABLE_CORRECTIONS.get(
                 device[CONF_OUTPUT_CORRECTION]
             )
 
@@ -182,14 +168,14 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         self._features = 0
         self._supported_color_modes = set()
         # channel & notification callbacks
-        self._channel: self._channel_size[1] = None
+        self._channel = self._channel_size[1] = None
         self._channel_last_update = 0
         self._scale_factor = 1
         self._channel_width = 0
         self._type = None
 
     def set_channel(self, channel):
-        "Set the channel & the callbacks"
+        """Set the channel & the callbacks"""
         # assert isinstance(channel, self._channel_size[1])
         self._channel = channel
         self._channel.callback_value_changed = self._channel_value_change
@@ -229,18 +215,17 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
 
     @property
     def extra_state_attributes(self):
-        data = {}
-        data["type"] = self._type
-        data["dmx_channels"] = [
-            k
-            for k in range(
-                self._channel.start, self._channel.start + self._channel.width, 1
-            )
-        ]
-        data["dmx_values"] = self._channel.get_channel_values()
-        data["values"] = self._vals
-        data["bright"] = self._brightness
-        data["transition"] = self._transition
+        data = {"type": self._type,
+                "dmx_channels": [
+                    k for k in range(
+                        self._channel.start, self._channel.start + self._channel.width, 1
+                    )
+                ],
+                "dmx_values": self._channel.get_channel_values(),
+                "values": self._vals,
+                "bright": self._brightness,
+                "transition": self._transition
+                }
         self._channel_last_update = time.time()
         return data
 
@@ -267,22 +252,22 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         self._fade_time = value
 
     def _channel_value_change(self, channel):
-        "Shedule update while fade is running"
+        """Schedule update while fade is running"""
         if time.time() - self._channel_last_update > 1.1:
             self._channel_last_update = time.time()
             self.async_schedule_update_ha_state()
 
     def _channel_fade_finish(self, channel):
-        "Fade is finished -> shedule update"
+        """Fade is finished -> schedule update"""
         self._channel_last_update = time.time()
         self.async_schedule_update_ha_state()
 
     def get_target_values(self) -> list:
-        "Return the Target DMX Values"
+        """Return the Target DMX Values"""
         raise NotImplementedError()
 
     async def async_create_fade(self, **kwargs):
-        "Instruct the light to turn on"
+        """Instruct the light to turn on"""
         self._state = True
 
         self._transition = kwargs.get(ATTR_TRANSITION, self._fade_time)
@@ -304,7 +289,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
             "Turning off '%s' with transition  %i", self._name, self._transition
         )
         self._channel.add_fade(
-            [0 for k in range(self._channel.width)],
+            [0 for _ in range(self._channel.width)],
             self._transition * 1000,
             pyartnet.fades.LinearFade,
         )
@@ -322,11 +307,23 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
                 log.debug("Channel type changed. Unable to restore state.")
                 old_state = None
 
-        if old_state != None:
+        if old_state is not None:
             await self.restore_state(old_state)
 
     async def restore_state(self, old_state):
         log.error("Derived class should implement this. Report this to the repository author.")
+
+    @property
+    def channel_width(self):
+        return self._channel_width
+
+    @property
+    def channel_size(self):
+        return self._channel_size
+
+    @property
+    def channel(self):
+        return self._channel
 
 
 class ArtnetBinary(ArtnetBaseLight):
@@ -435,7 +432,7 @@ class ArtnetRGB(ArtnetBaseLight):
         self._supported_color_modes.add(COLOR_MODE_RGB)
         self._features = SUPPORT_TRANSITION
         self._color_mode = COLOR_MODE_RGB
-        self._vals = [255, 255, 255]
+        self._vals = (255, 255, 255)
 
     @property
     def rgb_color(self) -> tuple:
@@ -443,8 +440,7 @@ class ArtnetRGB(ArtnetBaseLight):
         return self._vals
 
     def get_target_values(self):
-        l = [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
-        return l
+        return [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
 
     async def async_turn_on(self, **kwargs):
         """
@@ -518,7 +514,7 @@ class ArtnetWhite(ArtnetBaseLight):
         )
         cw_fraction = 1 - ww_fraction
         max_fraction = max(ww_fraction, cw_fraction)
-        l = [
+        level = [
             floor(
                 self.is_on
                 * self._brightness
@@ -533,8 +529,8 @@ class ArtnetWhite(ArtnetBaseLight):
             ),
         ]
         return [
-            l[self._channel_order[0]],
-            l[self._channel_order[1]]
+            level[self._channel_order[0]],
+            level[self._channel_order[1]]
         ]
 
     async def async_turn_on(self, **kwargs):
@@ -580,7 +576,7 @@ class ArtnetRGBW(ArtnetBaseLight):
         self._supported_color_modes.add(COLOR_MODE_RGBW)
         self._features = SUPPORT_TRANSITION
         self._color_mode = COLOR_MODE_RGBW
-        self._vals = [255, 255, 255, 255]
+        self._vals = (255, 255, 255, 255)
 
     @property
     def rgbw_color(self) -> tuple:
@@ -588,8 +584,7 @@ class ArtnetRGBW(ArtnetBaseLight):
         return self._vals
 
     def get_target_values(self):
-        l = [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
-        return l
+        return [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
 
     async def async_turn_on(self, **kwargs):
         """
@@ -631,7 +626,7 @@ class ArtnetRGBWW(ArtnetBaseLight):
         self._supported_color_modes.add(COLOR_MODE_RGBWW)
         self._features = SUPPORT_TRANSITION
         self._color_mode = COLOR_MODE_RGBWW
-        self._vals = [255, 255, 255, 255, 255]
+        self._vals = (255, 255, 255, 255, 255)
 
     @property
     def rgbww_color(self) -> tuple:
@@ -639,8 +634,7 @@ class ArtnetRGBWW(ArtnetBaseLight):
         return self._vals
 
     def get_target_values(self):
-        l = [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
-        return l
+        return [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
 
     async def async_turn_on(self, **kwargs):
         """
