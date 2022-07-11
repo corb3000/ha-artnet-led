@@ -166,7 +166,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         self._features = 0
         self._supported_color_modes = set()
         # channel & notification callbacks
-        self._channel = self._channel_size[1] = None
+        self._channel: self._channel_size[1] = None
         self._channel_last_update = 0
         self._scale_factor = 1
         self._channel_width = 0
