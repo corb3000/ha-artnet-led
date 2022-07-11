@@ -127,7 +127,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             device["unique_id"] = str(universe_nr)
 
             # create device
-            d = cls(**device)  # type: ArtnetBaseLight
+            d = cls(**device)  # type: DmxBaseLight
             d.set_type(device[CONF_DEVICE_TYPE])
             d.set_channel(
                 universe.add_channel(
@@ -150,7 +150,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     return True
 
 
-class ArtnetBaseLight(LightEntity, RestoreEntity):
+class DmxBaseLight(LightEntity, RestoreEntity):
     def __init__(self, name, unique_id, **kwargs):
         self._name = name
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
@@ -173,7 +173,6 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
 
     def set_channel(self, channel):
         """Set the channel & the callbacks"""
-        # assert isinstance(channel, self._channel_size[1])
         self._channel = channel
         self._channel.callback_value_changed = self._channel_value_change
         self._channel.callback_fade_finished = self._channel_fade_finish
@@ -323,7 +322,7 @@ class ArtnetBaseLight(LightEntity, RestoreEntity):
         return self._channel
 
 
-class ArtnetBinary(ArtnetBaseLight):
+class DmxBinary(DmxBaseLight):
     CONF_TYPE = "binary"
     CHANNEL_WIDTH = 1
 
@@ -364,7 +363,7 @@ class ArtnetBinary(ArtnetBaseLight):
             await self.async_turn_off()
 
 
-class ArtnetFixed(ArtnetBaseLight):
+class DmxFixed(DmxBaseLight):
     CONF_TYPE = "fixed"
     CHANNEL_WIDTH = 1
 
@@ -386,7 +385,7 @@ class ArtnetFixed(ArtnetBaseLight):
         await super().async_create_fade()
 
 
-class ArtnetDimmer(ArtnetBaseLight):
+class DmxDimmer(DmxBaseLight):
     CONF_TYPE = "dimmer"
     CHANNEL_WIDTH = 1
 
@@ -419,7 +418,7 @@ class ArtnetDimmer(ArtnetBaseLight):
             await super().async_create_fade(brightness=self._brightness, transition=0)
 
 
-class ArtnetRGB(ArtnetBaseLight):
+class DmxRGB(DmxBaseLight):
     CONF_TYPE = "rgb"
     CHANNEL_WIDTH = 3
 
@@ -469,7 +468,7 @@ class ArtnetRGB(ArtnetBaseLight):
             await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
-class ArtnetWhite(ArtnetBaseLight):
+class DmxWhite(DmxBaseLight):
     CONF_TYPE = "color_temp"
     CHANNEL_WIDTH = 2
 
@@ -565,7 +564,7 @@ class ArtnetWhite(ArtnetBaseLight):
         return color_util.color_temperature_kelvin_to_mired(kelvin_number)
 
 
-class ArtnetRGBW(ArtnetBaseLight):
+class DmxRGBW(DmxBaseLight):
     CONF_TYPE = "rgbw"
     CHANNEL_WIDTH = 4
 
@@ -615,7 +614,7 @@ class ArtnetRGBW(ArtnetBaseLight):
             await super().async_create_fade(brightness=self._brightness, rgbw_color=self._vals, transition=0)
 
 
-class ArtnetRGBWW(ArtnetBaseLight):
+class DmxRGBWW(DmxBaseLight):
     CONF_TYPE = "rgbww"
     CHANNEL_WIDTH = 5
 
@@ -671,7 +670,7 @@ class ArtnetRGBWW(ArtnetBaseLight):
 # conf
 # ------------------------------------------------------------------------------
 
-__CLASS_LIST = [ArtnetDimmer, ArtnetRGB, ArtnetWhite, ArtnetRGBW, ArtnetRGBWW, ArtnetBinary, ArtnetFixed]
+__CLASS_LIST = [DmxDimmer, DmxRGB, DmxWhite, DmxRGBW, DmxRGBWW, DmxBinary, DmxFixed]
 __CLASS_TYPE = {k.CONF_TYPE: k for k in __CLASS_LIST}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
