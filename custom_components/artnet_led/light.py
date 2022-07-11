@@ -483,7 +483,7 @@ class DmxWhite(DmxBaseLight):
         self._max_mireds = self.convert_to_mireds(kwargs[CONF_DEVICE_MIN_TEMP])
         self._vals = (self._max_mireds + self._min_mireds) / 2 or 300
 
-        self._channel_setup = kwargs[CONF_CHANNEL_SETUP]
+        self._channel_setup = kwargs.get(CONF_CHANNEL_SETUP, "ch")
         self._channel_width = len(self._channel_setup)
 
     @property
@@ -527,7 +527,7 @@ class DmxWhite(DmxBaseLight):
 
         values = list()
         for channel in self._channel_setup:
-            values.append(int(round(switcher.get(channel, 0))))
+            values.append(int(round(switcher.get(channel, 0))) * self._channel_size[2])
 
         return values
 
