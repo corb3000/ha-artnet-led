@@ -8,6 +8,19 @@ Use Brightness and RGB value separately to give more resolution to brightness to
 
 The DMX integration for Home Assistant allows you to send DMX values to an [Art-Net](http://www.art-net.org.uk) capable DMX interface. This component is a one way integration which sends [Art-Net](https://en.wikipedia.org/wiki/Art-Net) UDP packets to the DMX interface. This integration uses [pyartnet](https://github.com/spacemanspiff2007/PyArtNet) libraries and requires at least Python version 3.8.
 
+## WIP before submitting it to HACS' default repositories
+
+- [x] Implement custom_white
+- [ ] Reimplement KiNet
+- [ ] Implement sACN (https://github.com/jnimmo/hass-dmx/pull/66)
+- [ ] Stop animation thread when not animating (https://github.com/jnimmo/hass-dmx/pull/8#issuecomment-449679960)
+
+## WIP before submitting it to Home Assistant core integrations
+
+- [ ] Implement Art-Net broadcast IP (https://github.com/jnimmo/hass-dmx/issues/58)
+- [ ] Implement custom_rgb (https://github.com/jnimmo/hass-dmx/issues/65)
+- [ ] Implement custom_any (https://github.com/jnimmo/hass-dmx/issues/54, https://github.com/jnimmo/hass-dmx/issues/62)
+
 ## Prerequisites
 
 * [Home Assistant (hass)](https://www.home-assistant.io/) >= 2021.5 for Color_Mode.
@@ -148,9 +161,9 @@ linear (default when nothing is set), quadratic, cubic then quadruple
 
 #### Supported hardware
 
-- Should work with any Art-Net enabled DMX interface.
+- Should work with any Art-Net, KiNet or e1.31 sACN enabled DMX interface.
 - Artnet interface tested on DMX King eDMX4 and ENTTEC DIN Ethergate 2.
-- 16 bit DMX support tested on Bincolor BC-632 and Bincolor BC-640-DIN.
+- e1.31 sACN interface tested on esPixelStick and Falcon F16v2
 
 
 ## See Also

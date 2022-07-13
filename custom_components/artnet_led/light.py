@@ -354,9 +354,6 @@ class DmxBinary(DmxBaseLight):
         self._state = old_state.state
         self._brightness = old_state.attributes.get('bright')
 
-        log.debug(old_state.state)
-        log.debug(old_state.attributes.get('bright'))
-
         if old_state.state == STATE_ON:
             await self.async_turn_on()
         else:
