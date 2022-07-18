@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBWW,
     SUPPORT_TRANSITION,
     PLATFORM_SCHEMA,
-    LightEntity,
+    LightEntity, COLOR_MODE_ONOFF,
 )
 from homeassistant.const import CONF_DEVICES, STATE_OFF, STATE_ON
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
@@ -322,6 +322,28 @@ class DmxBaseLight(LightEntity, RestoreEntity):
         return self._channel
 
 
+class DmxFixed(DmxBaseLight):
+    CONF_TYPE = "fixed"
+    CHANNEL_WIDTH = 1
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._channel_width = 1
+
+    def get_target_values(self):
+        return [self.brightness * self._channel_size[2]]
+
+    async def async_turn_on(self, **kwargs):
+        pass  # do nothing, fixed is constant value
+
+    async def async_turn_off(self, **kwargs):
+        pass  # do nothing, fixed is constant value
+
+    async def restore_state(self, old_state):
+        log.debug("Added fixed to hass. Do nothing to restore state. Fixed is constant value")
+        await super().async_create_fade()
+
+
 class DmxBinary(DmxBaseLight):
     CONF_TYPE = "binary"
     CHANNEL_WIDTH = 1
@@ -329,6 +351,8 @@ class DmxBinary(DmxBaseLight):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._channel_width = 1
+        self._supported_color_modes.add(COLOR_MODE_ONOFF)
+        self._color_mode = COLOR_MODE_ONOFF
 
     def get_target_values(self):
         return [self.brightness * self._channel_size[2]]
@@ -358,28 +382,6 @@ class DmxBinary(DmxBaseLight):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
-
-
-class DmxFixed(DmxBaseLight):
-    CONF_TYPE = "fixed"
-    CHANNEL_WIDTH = 1
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._channel_width = 1
-
-    def get_target_values(self):
-        return [self.brightness * self._channel_size[2]]
-
-    async def async_turn_on(self, **kwargs):
-        pass  # do nothing, fixed is constant value
-
-    async def async_turn_off(self, **kwargs):
-        pass  # do nothing, fixed is constant value
-
-    async def restore_state(self, old_state):
-        log.debug("Added fixed to hass. Do nothing to restore state. Fixed is constant value")
-        await super().async_create_fade()
 
 
 class DmxDimmer(DmxBaseLight):
@@ -413,56 +415,6 @@ class DmxDimmer(DmxBaseLight):
 
         if old_state.state != STATE_OFF:
             await super().async_create_fade(brightness=self._brightness, transition=0)
-
-
-class DmxRGB(DmxBaseLight):
-    CONF_TYPE = "rgb"
-    CHANNEL_WIDTH = 3
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._channel_width = 3
-        self._supported_color_modes.add(COLOR_MODE_RGB)
-        self._features = SUPPORT_TRANSITION
-        self._color_mode = COLOR_MODE_RGB
-        self._vals = (255, 255, 255)
-
-    @property
-    def rgb_color(self) -> tuple:
-        """Return the rgb color value."""
-        return self._vals
-
-    def get_target_values(self):
-        return [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
-
-    async def async_turn_on(self, **kwargs):
-        """
-        Instruct the light to turn on.
-        """
-
-        # RGB already contains brightness information
-        if ATTR_RGB_COLOR in kwargs:
-            self._vals = kwargs[ATTR_RGB_COLOR]
-            # self._scale_factor = 1
-
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._scale_factor = self._brightness / 255
-
-        await super().async_create_fade(**kwargs)
-        return None
-
-    async def restore_state(self, old_state):
-        log.debug("Added rgb to hass. Try restoring state.")
-
-        if old_state:
-            prev_vals = old_state.attributes.get('values')
-            self._vals = prev_vals
-            prev_brightness = old_state.attributes.get('bright')
-            self._brightness = prev_brightness
-
-        if old_state.state != STATE_OFF:
-            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
 class DmxWhite(DmxBaseLight):
@@ -559,6 +511,56 @@ class DmxWhite(DmxBaseLight):
     def convert_to_mireds(kelvin_string):
         kelvin_number = int(kelvin_string[:-1])
         return color_util.color_temperature_kelvin_to_mired(kelvin_number)
+
+
+class DmxRGB(DmxBaseLight):
+    CONF_TYPE = "rgb"
+    CHANNEL_WIDTH = 3
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._channel_width = 3
+        self._supported_color_modes.add(COLOR_MODE_RGB)
+        self._features = SUPPORT_TRANSITION
+        self._color_mode = COLOR_MODE_RGB
+        self._vals = (255, 255, 255)
+
+    @property
+    def rgb_color(self) -> tuple:
+        """Return the rgb color value."""
+        return self._vals
+
+    def get_target_values(self):
+        return [floor(k * self._scale_factor * self._channel_size[2]) for k in self._vals]
+
+    async def async_turn_on(self, **kwargs):
+        """
+        Instruct the light to turn on.
+        """
+
+        # RGB already contains brightness information
+        if ATTR_RGB_COLOR in kwargs:
+            self._vals = kwargs[ATTR_RGB_COLOR]
+            # self._scale_factor = 1
+
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            self._scale_factor = self._brightness / 255
+
+        await super().async_create_fade(**kwargs)
+        return None
+
+    async def restore_state(self, old_state):
+        log.debug("Added rgb to hass. Try restoring state.")
+
+        if old_state:
+            prev_vals = old_state.attributes.get('values')
+            self._vals = prev_vals
+            prev_brightness = old_state.attributes.get('bright')
+            self._brightness = prev_brightness
+
+        if old_state.state != STATE_OFF:
+            await super().async_create_fade(brightness=self._brightness, rgb_color=self._vals, transition=0)
 
 
 class DmxRGBW(DmxBaseLight):
