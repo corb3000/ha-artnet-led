@@ -18,7 +18,7 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 ## WIP before submitting it to Home Assistant core integrations
 
 - [ ] Implement Art-Net broadcast IP (https://github.com/jnimmo/hass-dmx/issues/58)
-- [ ] Implement custom_rgb (https://github.com/jnimmo/hass-dmx/issues/65)
+- [x] Implement custom_rgb (https://github.com/jnimmo/hass-dmx/issues/65)
 - [ ] Implement custom_any (https://github.com/jnimmo/hass-dmx/issues/54, https://github.com/jnimmo/hass-dmx/issues/62)
 
 ## Prerequisites
@@ -63,6 +63,7 @@ light:
           transition: 1
           channel_size: 16bit
           output_correction: quadratic
+          channel_setup: rbg
         - channel: 125
           type: color_temp
           name: "my_color_temp_lamp"
@@ -113,19 +114,44 @@ light:
     - **'24bit'** (too many steps)
     - **'32bit'** (don't ask steps)
   - **default_level** (*Optional; value at startup, if state can't or shouldn't be restored*)
+  - **min_temp** (Optional; default=2700K): Only applies for types 'color_temp' and 'rgbww'
+  - **max_temp** (Optional; default=6500K): Only applies for types 'color_temp' and 'rgbww'
+  - **channel_setup** (Optional; see [channel_setup](#channel_setup))
 
-### color_temp configuration variables
-On the same level as device variables, but these only apply to devices of type 'color_temp'.
-  - **min_temp** (Optional; default=2700K)
-  - **max_temp** (Optional; default=6500K)
-  - **channel_setup** (Optional; default=ch): String to define channel layout where:
-    - `d` = dimmer (brightness 0 to 255)
-    - `c` = cool white value, scaled for brightness
-    - `C` = cool white value, unscaled
-    - `h` = warm white value, scaled for brightness
-    - `H` = warm white value, unscaled
-    - `t` = temperature (0 = warm, 255 = cold)
-    - `T` = temperature (255 = warm, 0 = cold)
+### channel_setup
+
+A string to customize the channel layout of your light.
+
+#### Definition
+
+- `d` = dimmer (brightness 0 to 255)
+- `c` = cool white value, scaled for brightness
+- `C` = cool white value, unscaled
+- `h` = warm white value, scaled for brightness
+- `H` = warm white value, unscaled
+- `t` = temperature (0 = warm, 255 = cold)
+- `T` = temperature (255 = warm, 0 = cold)
+- `r` = red, scaled for brightness
+- `R` = red, unscaled
+- `g` = green, scaled for brightness
+- `G` = green unscaled
+- `b` = blue, scaled for brightness
+- `B` = blue, unscaled
+- `w` = white, scaled for brightness
+- `W` = white, unscaled
+
+
+#### Compatibility
+
+| Type         |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     | Default value |
+|--------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|---------------|
+| binary       |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |               |
+| dimmer       |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |               |
+| custom_white | `d` | `c` | `C` | `h` | `H` | `t` | `T` |     |     |     |     |     |     |     |     | `ch`          |
+| rgb          | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` |     |     | `rgb`         |
+| rgbw         | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` | `w` | `W` | `rgbw`        |
+| rgbww        | `d` | `c` | `C` | `h` | `H` | `t` | `T` | `r` | `R` | `g` | `G` | `b` | `B` |     |     | `rgbch`       |
+
 
 ## Supported features
 
