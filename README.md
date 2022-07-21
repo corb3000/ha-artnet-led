@@ -60,6 +60,7 @@ light:
           channel_size: 16bit           # width of the channel sent to DMX device, default "8bit", "16bit", "24bit" and "32bit" available.
         - channel: 3
           name: my_rgb_lamp
+          type: rgb
           transition: 1
           channel_size: 16bit
           output_correction: quadratic
@@ -103,6 +104,7 @@ light:
     - **'rgbw'** (red, green, blue, white)
     - **'rgbww'** (red, green, blue, cool-white, warm-white)
     - **'color_temp'** (cool-white, warm-white)
+  - **transition** (*Optional; default=0*): Duration in seconds of the fading animation
   - **output_correction** (*Optional; default=linear*): applied to each channel, overrides universe setting.
     - **'linear'**
     - **'quadratic'** (see Graph)
