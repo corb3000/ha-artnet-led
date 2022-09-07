@@ -544,11 +544,11 @@ class DmxRGB(DmxBaseLight):
 
         switcher = {
             "d": lambda: self._brightness,
-            "r": lambda: self.is_on * red,
+            "r": lambda: self.is_on * red * self._brightness / max_color,
             "R": lambda: self.is_on * red * 255 / max_color,
-            "g": lambda: self.is_on * green,
+            "g": lambda: self.is_on * green * self._brightness / max_color,
             "G": lambda: self.is_on * green * 255 / max_color,
-            "b": lambda: self.is_on * blue,
+            "b": lambda: self.is_on * blue * self._brightness / max_color,
             "B": lambda: self.is_on * blue * 255 / max_color
         }
 
@@ -627,13 +627,13 @@ class DmxRGBW(DmxBaseLight):
 
         switcher = {
             "d": lambda: self._brightness,
-            "r": lambda: self.is_on * red,
+            "r": lambda: self.is_on * red * self._brightness / max_color,
             "R": lambda: self.is_on * red * 255 / max_color,
-            "g": lambda: self.is_on * green,
+            "g": lambda: self.is_on * green * self._brightness / max_color,
             "G": lambda: self.is_on * green * 255 / max_color,
-            "b": lambda: self.is_on * blue,
+            "b": lambda: self.is_on * blue* self._brightness / max_color,
             "B": lambda: self.is_on * blue * 255 / max_color,
-            "w": lambda: self.is_on * white,
+            "w": lambda: self.is_on * white* self._brightness / max_color,
             "W": lambda: self.is_on * white * 255 / max_color,
         }
 
@@ -735,15 +735,15 @@ class DmxRGBWW(DmxBaseLight):
 
         switcher = {
             "d": lambda: self._brightness,
-            "r": lambda: self.is_on * red,
+            "r": lambda: self.is_on * red * self._brightness / max_color,
             "R": lambda: self.is_on * red * 255 / max_color,
-            "g": lambda: self.is_on * green,
+            "g": lambda: self.is_on * green * self._brightness / max_color,
             "G": lambda: self.is_on * green * 255 / max_color,
-            "b": lambda: self.is_on * blue,
+            "b": lambda: self.is_on * blue * self._brightness / max_color,
             "B": lambda: self.is_on * blue * 255 / max_color,
-            "c": lambda: self.is_on * cold_white,
+            "c": lambda: self.is_on * cold_white * self._brightness / max_color,
             "C": lambda: self.is_on * cold_white * 255 / max_color,
-            "h": lambda: self.is_on * warm_white,
+            "h": lambda: self.is_on * warm_white * self._brightness / max_color,
             "H": lambda: self.is_on * warm_white * 255 / max_color,
             "t": lambda: 255 - ((self.color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds) * 255),
             "T": lambda: (self.color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds) * 255
