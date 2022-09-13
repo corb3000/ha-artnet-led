@@ -64,7 +64,7 @@ AVAILABLE_CORRECTIONS = {
 }
 
 
-def linear_output_correction(val: float):
+def linear_output_correction(val: float, max_val: int = 0xFF):
     return val
 
 
