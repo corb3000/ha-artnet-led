@@ -478,7 +478,11 @@ class DmxWhite(DmxBaseLight):
         values = list()
         for channel in self._channel_setup:
             calculation_function = switcher.get(channel, lambda: 0)
-            values.append(int(round(calculation_function() * self._channel_size[2])))
+            value = calculation_function()
+            if value < 0 or value > 256:
+                log.warning(f"Value for channel {channel} isn't within bound: {value}")
+                value = max(0, min(256, value))
+            values.append(int(round(value * self._channel_size[2])))
 
         return values
 
@@ -555,7 +559,11 @@ class DmxRGB(DmxBaseLight):
         values = list()
         for channel in self._channel_setup:
             calculation_function = switcher.get(channel, lambda: 0)
-            values.append(int(round(calculation_function() * self._channel_size[2])))
+            value = calculation_function()
+            if value < 0 or value > 256:
+                log.warning(f"Value for channel {channel} isn't within bound: {value}")
+                value = max(0, min(256, value))
+            values.append(int(round(value * self._channel_size[2])))
 
         return values
 
@@ -641,7 +649,11 @@ class DmxRGBW(DmxBaseLight):
         for channel in self._channel_setup:
             calculation_function = switcher.get(channel, lambda: 0)
             log.info(f"DEBUGGY for {channel}: {calculation_function()}")
-            values.append(int(round(calculation_function() * self._channel_size[2])))
+            value = calculation_function()
+            if value < 0 or value > 256:
+                log.warning(f"Value for channel {channel} isn't within bound: {value}")
+                value = max(0, min(256, value))
+            values.append(int(round(value * self._channel_size[2])))
 
         return values
 
@@ -752,7 +764,11 @@ class DmxRGBWW(DmxBaseLight):
         values = list()
         for channel in self._channel_setup:
             calculation_function = switcher.get(channel, lambda: 0)
-            values.append(int(round(calculation_function() * self._channel_size[2])))
+            value = calculation_function()
+            if value < 0 or value > 256:
+                log.warning(f"Value for channel {channel} isn't within bound: {value}")
+                value = max(0, min(256, value))
+            values.append(int(round(value * self._channel_size[2])))
 
         return values
 
