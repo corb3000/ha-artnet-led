@@ -32,7 +32,7 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 > 
 > This integration requires [HACS](https://hacs.xyz/docs/setup/download/) to be installed
 
-> **Warning
+> **Warning**
 > 
 > When migrating from jnimmo or corb3000's integration: 
 > 1. First remove the integration
