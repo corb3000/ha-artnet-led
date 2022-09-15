@@ -28,9 +28,28 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 
 ## Installation
 
-This can be easily installed with the [Home Assistant Community Store (HACS)](https://github.com/custom-components/hacs) using the repository: *Breina/ha-artnet-led*
+> **Note**
+> 
+> This integration requires [HACS](https://hacs.xyz/docs/setup/download/) to be installed
 
-Alternatively, manual installation by downloading the [custom_components/artnet_led](https://github.com/Breina/ha-artnet-led) directory to the *custom_components/artnet_led* directory on your Home Assistant instance (generally */config/custom_components/artnet_led*).
+> **Warning
+> 
+> When migrating from jnimmo or corb3000's integration: 
+> 1. First remove the integration
+> 2. Comment or remove the YAML config
+> 3. Restart
+> 4. Delete the light entities
+> 5. Install this integration and re-introduce the config (also change change `custom_white` to `color_temp`)
+
+1. Open HACS
+2. Open the options in the top right and select _Custom repositories_
+3. Enter this repository's URL (`https://github.com/Breina/ha-artnet-led`) under the Category _Integration_.
+4. Press _Add_
+5. _+ EXPLORE & DOWNLOAD REPOSITORIES_
+6. Find _Art-net LED Lighting for DMX_ in this list
+7. _DOWNLOAD THIS REPOSITORY WITH HACS_
+8. _DOWNLOAD_
+9. Restart Home Assistant (_Settings_ > _System_ >  _RESTART_)
 
 ## Configuration
 
