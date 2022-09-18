@@ -29,6 +29,8 @@ from homeassistant.const import CONF_HOST as CONF_NODE_HOST
 from homeassistant.const import CONF_NAME as CONF_DEVICE_NAME
 from homeassistant.const import CONF_PORT as CONF_NODE_PORT
 from homeassistant.const import CONF_TYPE as CONF_DEVICE_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import async_get, RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 CONF_DEVICE_TRANSITION = ATTR_TRANSITION
@@ -55,6 +57,8 @@ CONF_CHANNEL_SIZE = "channel_size"
 CONF_DEVICE_MIN_TEMP = "min_temp"
 CONF_DEVICE_MAX_TEMP = "max_temp"
 CONF_CHANNEL_SETUP = "channel_setup"
+
+DOMAIN = "dmx"
 
 AVAILABLE_CORRECTIONS = {
     "linear": None,
@@ -83,7 +87,7 @@ CHANNEL_SIZE = {
 ARTNET_NODES = {}
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistant, config, async_add_devices, discovery_info=None):
     import pprint
 
     for line in pprint.pformat(config).splitlines():
@@ -106,6 +110,9 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     node = ARTNET_NODES[id]
     assert isinstance(node, pyartnet.ArtNetNode), type(node)
 
+    entity_registry = async_get(hass)
+    await entity_registry.async_load()
+
     device_list = []
     for universe_nr, universe_cfg in config[CONF_NODE_UNIVERSES].items():
         try:
@@ -123,14 +130,27 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         for device in universe_cfg[CONF_DEVICES]:  # type: dict
             device = device.copy()
             cls = __CLASS_TYPE[device[CONF_DEVICE_TYPE]]
-            device["unique_id"] = str(universe_nr)
+
+            channel = device[CONF_DEVICE_CHANNEL]
+            unique_id = f"{DOMAIN}:{host}/{universe_nr}/{channel}"
+
+            name: str = device[CONF_DEVICE_NAME]
+
+            entity_id = f"light.{name.replace(' ', '_').lower()}"
+
+            # If the entity has another unique ID, use that until it's migrated porperly
+            entity = entity_registry.async_get(entity_id)
+            if entity:
+                logging.info(f"Found existing entity for name {entity_id}, using unique id {unique_id}")
+                unique_id = entity.unique_id
 
             # create device
+            device["unique_id"] = unique_id
             d = cls(**device)  # type: DmxBaseLight
             d.set_type(device[CONF_DEVICE_TYPE])
             d.set_channel(
                 universe.add_channel(
-                    start=device[CONF_DEVICE_CHANNEL],
+                    start=channel,
                     width=d.channel_width,
                     channel_name=d.name,
                     channel_type=d.channel_size[1],
@@ -144,9 +164,39 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             d.set_initial_brightness(device[CONF_DEVICE_VALUE])
 
             device_list.append(d)
-
     async_add_devices(device_list)
+
+    await migrate_old_unique_ids(config, hass, host)
+
     return True
+
+
+async def migrate_old_unique_ids(config, hass, host):
+    # Check if we need to migrate the old unique_id structure to the new type, keep this in the code for a while.
+    entity_registry = async_get(hass)
+    await entity_registry.async_load()
+    registry_changed = False
+    for universe_nr, universe_cfg in config[CONF_NODE_UNIVERSES].items():
+        for device in universe_cfg[CONF_DEVICES]:  # type: dict
+            channel = device[CONF_DEVICE_CHANNEL]
+            name: str = device[CONF_DEVICE_NAME]
+            entity_id = f"light.{name.replace(' ', '_').lower()}"
+            unique_id = f"{DOMAIN}:{host}/{universe_nr}/{channel}"
+
+            entity: RegistryEntry = entity_registry.async_get(entity_id)
+            # New format, don't migrate
+            if '/' in entity.unique_id:
+                continue
+
+            if entity_registry.async_is_registered(entity_id):
+                logging.warning(
+                    "Found old unique ID structure, migrating entity '%s' to unique id '%s'...", entity_id, unique_id
+                )
+                entity_registry.async_update_entity(entity_id, new_unique_id=unique_id)
+                registry_changed = True
+
+    if registry_changed:
+        entity_registry.async_schedule_save()
 
 
 def convert_to_mireds(kelvin_string):
@@ -155,10 +205,20 @@ def convert_to_mireds(kelvin_string):
 
 
 class DmxBaseLight(LightEntity, RestoreEntity):
-    def __init__(self, name, unique_id, **kwargs):
+    def __init__(self, name, unique_id: str, **kwargs):
         self._name = name
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
-        self._unique_id = unique_id + str(self._channel)
+
+        self._unique_id = unique_id
+
+        # Check if we need to migrate the old unique_id structure to the new type, keep this in the code for a while.
+        # entity_registry = async_get(self.hass)
+        # old_unique_id = f"{unique_id.partition('/')}{self._channel}"
+        # if not entity_registry.async_is_registered(old_unique_id):
+        #     logging.warning("Found old unique ID structure, migrating '%s' to '%s'...", old_unique_id, self._unique_id)
+        #     entity_registry.async_update_entity(old_unique_id, new_unique_id=self._unique_id)
+
+        self.entity_id = f"light.{name.replace(' ', '_').lower()}"
         self._brightness = 255
         self._fade_time = kwargs[CONF_DEVICE_TRANSITION]
         self._transition = self._fade_time
@@ -639,9 +699,9 @@ class DmxRGBW(DmxBaseLight):
             "R": lambda: self.is_on * red * 255 / max_color,
             "g": lambda: self.is_on * green * self._brightness / max_color,
             "G": lambda: self.is_on * green * 255 / max_color,
-            "b": lambda: self.is_on * blue* self._brightness / max_color,
+            "b": lambda: self.is_on * blue * self._brightness / max_color,
             "B": lambda: self.is_on * blue * 255 / max_color,
-            "w": lambda: self.is_on * white* self._brightness / max_color,
+            "w": lambda: self.is_on * white * self._brightness / max_color,
             "W": lambda: self.is_on * white * 255 / max_color,
         }
 
