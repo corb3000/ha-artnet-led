@@ -23,6 +23,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     LightEntity, COLOR_MODE_ONOFF, COLOR_MODE_WHITE,
 )
+from homeassistant.util.color import color_rgb_to_rgbw
 from homeassistant.const import CONF_DEVICES, STATE_OFF, STATE_ON
 from homeassistant.const import CONF_FRIENDLY_NAME as CONF_DEVICE_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST as CONF_NODE_HOST
@@ -526,6 +527,8 @@ class DmxRGB(DmxBaseLight):
         self._channel_setup = kwargs.get(CONF_CHANNEL_SETUP) or "rgb"
         self._channel_width = len(self._channel_setup)
 
+        self._auto_scale_white = self._channel_setup.find("w") or self._channel_setup.find("W")
+
     @property
     def rgb_color(self) -> tuple:
         """Return the rgb color value."""
@@ -539,10 +542,15 @@ class DmxRGB(DmxBaseLight):
         # G = green (not scaled)
         # b = blue (scaled for brightness)
         # B = blue (not scaled)
+        # w = white (automatically calculated, scaled for brightness)
+        # W = white (automatically calculated, not scaled)
 
         red = self._vals[0]
         green = self._vals[1]
         blue = self._vals[2]
+
+        if self._auto_scale_white:
+            red, green, blue, white = color_rgb_to_rgbw(red, green, blue)
 
         max_color = max(self._vals)
 
@@ -553,7 +561,9 @@ class DmxRGB(DmxBaseLight):
             "g": lambda: self.is_on * green * self._brightness / max_color,
             "G": lambda: self.is_on * green * 255 / max_color,
             "b": lambda: self.is_on * blue * self._brightness / max_color,
-            "B": lambda: self.is_on * blue * 255 / max_color
+            "B": lambda: self.is_on * blue * 255 / max_color,
+            "w": lambda: self.is_on * white * self._brightness / max_color,
+            "W": lambda: self.is_on * white * 255 / max_color
         }
 
         values = list()
