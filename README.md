@@ -19,7 +19,8 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 
 - [ ] Implement Art-Net broadcast IP (https://github.com/jnimmo/hass-dmx/issues/58)
 - [x] Implement custom_rgb (https://github.com/jnimmo/hass-dmx/issues/65)
-- [ ] Implement custom_any (https://github.com/jnimmo/hass-dmx/issues/54, https://github.com/jnimmo/hass-dmx/issues/62)
+- [ ] Implement custom light colors (https://github.com/jnimmo/hass-dmx/issues/52)
+- [ ] Implement custom_device (https://github.com/jnimmo/hass-dmx/issues/54, https://github.com/jnimmo/hass-dmx/issues/62, https://github.com/Breina/ha-artnet-led/issues/7)
 
 ## Prerequisites
 
