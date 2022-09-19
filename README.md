@@ -165,14 +165,14 @@ A string to customize the channel layout of your light.
 
 #### Compatibility
 
-| Type         |     |     |     |     |     |     |     |     |     |     |     |     |     |        |       | Default value |
-|--------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|--------|-------|---------------|
-| binary       |     |     |     |     |     |     |     |     |     |     |     |     |     |        |       |               |
-| dimmer       |     |     |     |     |     |     |     |     |     |     |     |     |     |        |       |               |
-| custom_white | `d` | `c` | `C` | `h` | `H` | `t` | `T` |     |     |     |     |     |     |        |       | `ch`          |
-| rgb          | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` | `w` \* | `W`\* | `rgb`         |
-| rgbw         | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` | `w`    | `W`   | `rgbw`        |
-| rgbww        | `d` | `c` | `C` | `h` | `H` | `t` | `T` | `r` | `R` | `g` | `G` | `b` | `B` |        |       | `rgbch`       |
+| Type         |     |     |     |     |     |     |     |     |     |     |     |     |     |       |       | Default value |
+|--------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-------|-------|---------------|
+| binary       |     |     |     |     |     |     |     |     |     |     |     |     |     |       |       |               |
+| dimmer       |     |     |     |     |     |     |     |     |     |     |     |     |     |       |       |               |
+| custom_white | `d` | `c` | `C` | `h` | `H` | `t` | `T` |     |     |     |     |     |     |       |       | `ch`          |
+| rgb          | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` | `w`\* | `W`\* | `rgb`         |
+| rgbw         | `d` |     |     |     |     |     |     | `r` | `R` | `g` | `G` | `b` | `B` | `w`   | `W`   | `rgbw`        |
+| rgbww        | `d` | `c` | `C` | `h` | `H` | `t` | `T` | `r` | `R` | `g` | `G` | `b` | `B` |       |       | `rgbch`       |
 
 \* In the case of a white channel being used in an RGB light fixture, the white channel is automatically calculated.
 
