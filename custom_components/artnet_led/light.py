@@ -185,16 +185,20 @@ async def migrate_old_unique_ids(config, hass, host):
             unique_id = f"{DOMAIN}:{host}/{universe_nr}/{channel}"
 
             entity: RegistryEntry = entity_registry.async_get(entity_id)
+            if not entity:
+                # No entity found with entity ID
+                logging.warning("Could not find entity with entity ID %s", entity_id)
+                continue
+
             # New format, don't migrate
             if '/' in entity.unique_id:
                 continue
 
-            if entity_registry.async_is_registered(entity_id):
-                logging.warning(
-                    "Found old unique ID structure, migrating entity '%s' to unique id '%s'...", entity_id, unique_id
-                )
-                entity_registry.async_update_entity(entity_id, new_unique_id=unique_id)
-                registry_changed = True
+            logging.warning(
+                "Found old unique ID structure, migrating entity '%s' to unique id '%s'...", entity_id, unique_id
+            )
+            entity_registry.async_update_entity(entity_id, new_unique_id=unique_id)
+            registry_changed = True
 
     if registry_changed:
         entity_registry.async_schedule_save()
@@ -211,13 +215,6 @@ class DmxBaseLight(LightEntity, RestoreEntity):
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
 
         self._unique_id = unique_id
-
-        # Check if we need to migrate the old unique_id structure to the new type, keep this in the code for a while.
-        # entity_registry = async_get(self.hass)
-        # old_unique_id = f"{unique_id.partition('/')}{self._channel}"
-        # if not entity_registry.async_is_registered(old_unique_id):
-        #     logging.warning("Found old unique ID structure, migrating '%s' to '%s'...", old_unique_id, self._unique_id)
-        #     entity_registry.async_update_entity(old_unique_id, new_unique_id=self._unique_id)
 
         self.entity_id = f"light.{name.replace(' ', '_').lower()}"
         self._brightness = 255
