@@ -40,7 +40,8 @@ The DMX integration for Home Assistant allows you to send DMX values to an [Art-
 > 2. Comment or remove the YAML config
 > 3. Restart
 > 4. Delete the light entities
-> 5. Install this integration and re-introduce the config (also change change `custom_white` to `color_temp`)
+> 5. Remove all other _Custom_repositories_ that are also named `ha-artnet-led`
+> 6. Install this integration and re-introduce the config (also change change `custom_white` to `color_temp`)
 
 1. Open HACS
 2. Open the options in the top right and select _Custom repositories_
