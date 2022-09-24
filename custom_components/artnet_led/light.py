@@ -609,7 +609,7 @@ class DmxRGB(DmxBaseLight):
         if self._auto_scale_white:
             red, green, blue, white = color_rgb_to_rgbw(red, green, blue)
 
-        max_color = max(self._vals)
+        max_color = max(1, max(self._vals))
 
         switcher = {
             "d": lambda: self._brightness,
@@ -642,7 +642,6 @@ class DmxRGB(DmxBaseLight):
         # RGB already contains brightness information
         if ATTR_RGB_COLOR in kwargs:
             self._vals = kwargs[ATTR_RGB_COLOR]
-            # self._scale_factor = 1
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -698,7 +697,7 @@ class DmxRGBW(DmxBaseLight):
         blue = self._vals[2]
         white = self._vals[3]
 
-        max_color = max(self._vals)
+        max_color = max(1, max(self._vals))
 
         switcher = {
             "d": lambda: self._brightness,
@@ -810,7 +809,7 @@ class DmxRGBWW(DmxBaseLight):
         cold_white = self._vals[3]
         warm_white = self._vals[4]
 
-        max_color = max(self._vals)
+        max_color = max(1, max(self._vals))
 
         switcher = {
             "d": lambda: self._brightness,
