@@ -139,11 +139,12 @@ async def async_setup_platform(hass: HomeAssistant, config, async_add_devices, d
 
             entity_id = f"light.{name.replace(' ', '_').lower()}"
 
-            # If the entity has another unique ID, use that until it's migrated porperly
+            # If the entity has another unique ID, use that until it's migrated properly
             entity = entity_registry.async_get(entity_id)
             if entity:
                 logging.info(f"Found existing entity for name {entity_id}, using unique id {unique_id}")
-                unique_id = entity.unique_id
+                if entity.unique_id is not None:
+                    unique_id = entity.unique_id
 
             # create device
             device["unique_id"] = unique_id
@@ -253,7 +254,6 @@ class DmxBaseLight(LightEntity, RestoreEntity):
 
     @property
     def unique_id(self):
-        # TODO add unique ID to device
         """Return unique ID for light."""
         return self._unique_id
 
