@@ -221,6 +221,7 @@ class DmxBaseLight(LightEntity, RestoreEntity):
 
         self.entity_id = f"light.{name.replace(' ', '_').lower()}"
         self._brightness = 255
+        self._attr_brightness = self._brightness
         self._fade_time = kwargs[CONF_DEVICE_TRANSITION]
         self._transition = self._fade_time
         self._state = False
