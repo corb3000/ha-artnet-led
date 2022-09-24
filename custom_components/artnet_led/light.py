@@ -115,6 +115,7 @@ async def async_setup_platform(hass: HomeAssistant, config, async_add_devices, d
     await entity_registry.async_load()
 
     device_list = []
+    used_unique_ids = []
     for universe_nr, universe_cfg in config[CONF_NODE_UNIVERSES].items():
         try:
             universe = node.get_universe(universe_nr)
@@ -143,8 +144,9 @@ async def async_setup_platform(hass: HomeAssistant, config, async_add_devices, d
             entity = entity_registry.async_get(entity_id)
             if entity:
                 logging.info(f"Found existing entity for name {entity_id}, using unique id {unique_id}")
-                if entity.unique_id is not None:
+                if entity.unique_id is not None and entity.unique_id not in used_unique_ids:
                     unique_id = entity.unique_id
+            used_unique_ids.append(unique_id)
 
             # create device
             device["unique_id"] = unique_id
