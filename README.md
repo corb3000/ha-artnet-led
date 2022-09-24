@@ -233,3 +233,6 @@ logger:
   logs:
     custom_components.artnet_led: debug
 ```
+# Legal
+
+Art-Net™ Designed by and Copyright Artistic Licence
