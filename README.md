@@ -102,6 +102,11 @@ light:
           type: fixed
 ```
 
+> **Warning**
+> 
+> Your name must be unique. We are migrating the old unique_id structure to a more resilient one, that uses the name's
+> uniqueness in to map them accordingly.
+
 ### Configuration variables
 - **host** (*Required*): Art-Net/DMX gateway address
 - **port** (*Optional; default=6454*): Art-Net/DMX gateway port
