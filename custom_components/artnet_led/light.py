@@ -587,7 +587,7 @@ class DmxRGB(DmxBaseLight):
         self._channel_setup = kwargs.get(CONF_CHANNEL_SETUP) or "rgb"
         self._channel_width = len(self._channel_setup)
 
-        self._auto_scale_white = self._channel_setup.find("w") or self._channel_setup.find("W")
+        self._auto_scale_white = "w" in self._channel_setup or "W" in self._channel_setup
 
     @property
     def rgb_color(self) -> tuple:
