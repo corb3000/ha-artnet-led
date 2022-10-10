@@ -170,41 +170,7 @@ async def async_setup_platform(hass: HomeAssistant, config, async_add_devices, d
             device_list.append(d)
     async_add_devices(device_list)
 
-    await migrate_old_unique_ids(config, hass, host)
-
     return True
-
-
-async def migrate_old_unique_ids(config, hass, host):
-    # Check if we need to migrate the old unique_id structure to the new type, keep this in the code for a while.
-    entity_registry = async_get(hass)
-    await entity_registry.async_load()
-    registry_changed = False
-    for universe_nr, universe_cfg in config[CONF_NODE_UNIVERSES].items():
-        for device in universe_cfg[CONF_DEVICES]:  # type: dict
-            channel = device[CONF_DEVICE_CHANNEL]
-            name: str = device[CONF_DEVICE_NAME]
-            entity_id = f"light.{name.replace(' ', '_').lower()}"
-            unique_id = f"{DOMAIN}:{host}/{universe_nr}/{channel}"
-
-            entity: RegistryEntry = entity_registry.async_get(entity_id)
-            if not entity:
-                # No entity found with entity ID
-                logging.warning("Could not find entity with entity ID %s", entity_id)
-                continue
-
-            # New format, don't migrate
-            if '/' in entity.unique_id:
-                continue
-
-            logging.warning(
-                "Found old unique ID structure, migrating entity '%s' to unique id '%s'...", entity_id, unique_id
-            )
-            entity_registry.async_update_entity(entity_id, new_unique_id=unique_id)
-            registry_changed = True
-
-    if registry_changed:
-        entity_registry.async_schedule_save()
 
 
 def convert_to_mireds(kelvin_string):
@@ -218,6 +184,7 @@ class DmxBaseLight(LightEntity, RestoreEntity):
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
 
         self._unique_id = unique_id
+        logging.error("THE UNIQUE ID IS: %s", unique_id)
 
         self.entity_id = f"light.{name.replace(' ', '_').lower()}"
         self._brightness = 255
