@@ -184,7 +184,6 @@ class DmxBaseLight(LightEntity, RestoreEntity):
         self._channel = kwargs[CONF_DEVICE_CHANNEL]
 
         self._unique_id = unique_id
-        logging.error("THE UNIQUE ID IS: %s", unique_id)
 
         self.entity_id = f"light.{name.replace(' ', '_').lower()}"
         self._brightness = 255
