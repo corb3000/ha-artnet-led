@@ -1,5 +1,4 @@
 {
     "name": "Art-net LED Lighting for DMX",
-    "domains": ["light"],
     "render_readme": true
   }
